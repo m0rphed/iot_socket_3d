@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { WallObjectType } from './WallObject'
 import { WallObject } from './WallObject'
+import { WALL_PARAMS, FLOOR_PARAMS, MARKER_PARAMS } from '../params/config'
 
 export class Room {
   private group: THREE.Group
@@ -10,8 +11,9 @@ export class Room {
   private width: number
   private height: number
   private wallHeight: number
-  private wallThickness: number = 0.1
+  private wallThickness: number = WALL_PARAMS.thickness
   private wallNormals: boolean[] = [] // true если нормаль внутрь комнаты
+  private wallEdgeLines: THREE.LineSegments[] = []
 
   constructor(width: number = 4, height: number = 4, wallHeight: number = 2.5) {
     this.width = width
@@ -26,12 +28,12 @@ export class Room {
   private createFloor() {
     const floorGeometry = new THREE.PlaneGeometry(this.width, this.height)
     const floorMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x808080,
-      roughness: 0.7,
-      metalness: 0.1,
+      color: FLOOR_PARAMS.color,
+      roughness: FLOOR_PARAMS.roughness,
+      metalness: FLOOR_PARAMS.metallic,
       side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.27
+      transparent: FLOOR_PARAMS.opacity < 1,
+      opacity: FLOOR_PARAMS.opacity
     })
     const floor = new THREE.Mesh(floorGeometry, floorMaterial)
     floor.rotation.x = -Math.PI / 2
@@ -45,74 +47,78 @@ export class Room {
     this.group.add(floorLine)
   }
 
+  private createWallWithEdges(
+    geometry: THREE.BoxGeometry,
+    material: THREE.Material,
+    position: THREE.Vector3,
+    rotationY: number
+  ): THREE.Mesh {
+    const wall = new THREE.Mesh(geometry, material)
+    wall.position.copy(position)
+    wall.rotation.y = rotationY
+    this.walls.push(wall)
+    this.group.add(wall)
+    // Контур
+    const edges = new THREE.EdgesGeometry(geometry)
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
+    line.position.copy(position)
+    line.rotation.y = rotationY
+    this.group.add(line)
+    this.wallEdgeLines.push(line)
+    return wall
+  }
+
+  private removeAllWallEdgeLines() {
+    this.wallEdgeLines.forEach(line => {
+      this.group.remove(line)
+      if (line.geometry) line.geometry.dispose()
+      if (line.material && line.material instanceof THREE.Material) line.material.dispose()
+    })
+    this.wallEdgeLines = []
+  }
+
   private createWalls() {
+    this.removeAllWallEdgeLines()
     const wallMaterial = new THREE.MeshStandardMaterial({
-      color: 0x986eba,
-      roughness: 0.5,
-      metalness: 0.1,
-      transparent: true,
-      opacity: 0.27
+      color: WALL_PARAMS.color,
+      roughness: WALL_PARAMS.roughness,
+      metalness: WALL_PARAMS.metallic,
+      transparent: WALL_PARAMS.opacity < 1,
+      opacity: WALL_PARAMS.opacity
     })
     // Передняя стена (WALL 0)
-    const frontWall = new THREE.Mesh(
+    this.createWallWithEdges(
       new THREE.BoxGeometry(this.width, this.wallHeight, this.wallThickness),
-      wallMaterial
+      wallMaterial,
+      new THREE.Vector3(0, this.wallHeight / 2, -this.height / 2),
+      Math.PI
     )
-    frontWall.position.set(0, this.wallHeight / 2, -this.height / 2)
-    frontWall.rotation.y = Math.PI
-    this.walls.push(frontWall)
-    this.group.add(frontWall)
-    const frontEdges = new THREE.EdgesGeometry(frontWall.geometry)
-    const frontLine = new THREE.LineSegments(frontEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
-    frontLine.position.copy(frontWall.position)
-    frontLine.rotation.copy(frontWall.rotation)
-    this.group.add(frontLine)
     // Задняя стена (WALL 1)
-    const backWall = new THREE.Mesh(
+    this.createWallWithEdges(
       new THREE.BoxGeometry(this.width, this.wallHeight, this.wallThickness),
-      wallMaterial
+      wallMaterial,
+      new THREE.Vector3(0, this.wallHeight / 2, this.height / 2),
+      0
     )
-    backWall.position.set(0, this.wallHeight / 2, this.height / 2)
-    this.walls.push(backWall)
-    this.group.add(backWall)
-    const backEdges = new THREE.EdgesGeometry(backWall.geometry)
-    const backLine = new THREE.LineSegments(backEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
-    backLine.position.copy(backWall.position)
-    backLine.rotation.copy(backWall.rotation)
-    this.group.add(backLine)
     // Левая стена (WALL 2)
-    const leftWall = new THREE.Mesh(
+    this.createWallWithEdges(
       new THREE.BoxGeometry(this.height, this.wallHeight, this.wallThickness),
-      wallMaterial
+      wallMaterial,
+      new THREE.Vector3(-this.width / 2, this.wallHeight / 2, 0),
+      -Math.PI / 2
     )
-    leftWall.position.set(-this.width / 2, this.wallHeight / 2, 0)
-    leftWall.rotation.y = -Math.PI / 2
-    this.walls.push(leftWall)
-    this.group.add(leftWall)
-    const leftEdges = new THREE.EdgesGeometry(leftWall.geometry)
-    const leftLine = new THREE.LineSegments(leftEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
-    leftLine.position.copy(leftWall.position)
-    leftLine.rotation.copy(leftWall.rotation)
-    this.group.add(leftLine)
     // Правая стена (WALL 3)
-    const rightWall = new THREE.Mesh(
+    this.createWallWithEdges(
       new THREE.BoxGeometry(this.height, this.wallHeight, this.wallThickness),
-      wallMaterial
+      wallMaterial,
+      new THREE.Vector3(this.width / 2, this.wallHeight / 2, 0),
+      Math.PI / 2
     )
-    rightWall.position.set(this.width / 2, this.wallHeight / 2, 0)
-    rightWall.rotation.y = Math.PI / 2
-    this.walls.push(rightWall)
-    this.group.add(rightWall)
-    const rightEdges = new THREE.EdgesGeometry(rightWall.geometry)
-    const rightLine = new THREE.LineSegments(rightEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
-    rightLine.position.copy(rightWall.position)
-    rightLine.rotation.copy(rightWall.rotation)
-    this.group.add(rightLine)
   }
 
   private createResizeMarkers() {
-    const markerGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2)
-    const markerMaterial = new THREE.MeshBasicMaterial({ color: 0x2196f3 })
+    const markerGeometry = new THREE.BoxGeometry(MARKER_PARAMS.size, MARKER_PARAMS.size, MARKER_PARAMS.size)
+    const markerMaterial = new THREE.MeshBasicMaterial({ color: MARKER_PARAMS.color })
     // Удаляем старые маркеры
     this.resizeMarkers.forEach(marker => {
       this.group.remove(marker)

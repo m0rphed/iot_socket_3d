@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { SOCKET_PARAMS, DOOR_PARAMS } from '../params/config'
 
 export type WallObjectType = 'socket' | 'door'
 
@@ -21,27 +22,27 @@ export class WallObject {
     this.isGhost = isGhost
     this.zOffset = zOffset
 
-    // Создание геометрии в зависимости от типа объекта
+    // Создание геометрии и материала по параметрам из config
     let geometry: THREE.BufferGeometry
     let material: THREE.Material
 
     if (type === 'socket') {
-      geometry = new THREE.BoxGeometry(0.1, 0.1, 0.05)
+      geometry = new THREE.BoxGeometry(SOCKET_PARAMS.width, SOCKET_PARAMS.height, SOCKET_PARAMS.depth)
       material = new THREE.MeshStandardMaterial({ 
-        color: 0x2196f3,
-        roughness: 0.5,
-        metalness: 0.8,
-        transparent: isGhost,
-        opacity: isGhost ? 0.5 : 1.0
+        color: SOCKET_PARAMS.color,
+        roughness: SOCKET_PARAMS.roughness,
+        metalness: SOCKET_PARAMS.metallic,
+        transparent: isGhost || SOCKET_PARAMS.opacity < 1,
+        opacity: isGhost ? SOCKET_PARAMS.ghostOpacity : SOCKET_PARAMS.opacity
       })
     } else {
-      geometry = new THREE.BoxGeometry(0.8, 2, 0.2)
+      geometry = new THREE.BoxGeometry(DOOR_PARAMS.width, DOOR_PARAMS.height, DOOR_PARAMS.depth)
       material = new THREE.MeshStandardMaterial({ 
-        color: 0xffac59,
-        roughness: 0.7,
-        metalness: 0.2,
-        transparent: isGhost,
-        opacity: isGhost ? 0.5 : 1.0
+        color: DOOR_PARAMS.color,
+        roughness: DOOR_PARAMS.roughness,
+        metalness: DOOR_PARAMS.metallic,
+        transparent: isGhost || DOOR_PARAMS.opacity < 1,
+        opacity: isGhost ? DOOR_PARAMS.ghostOpacity : DOOR_PARAMS.opacity
       })
     }
     this.mesh = new THREE.Mesh(geometry, material)

@@ -48,6 +48,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Room } from './Room'
 import type { WallObjectType } from './WallObject'
 import { WallObject } from './WallObject'
+import { WALL_PARAMS, FLOOR_PARAMS, MARKER_PARAMS, DEBUG_PARAMS } from '../params/config'
 
 const container = ref<HTMLElement | null>(null)
 const currentMode = ref<'room' | 'object'>('room')
@@ -525,6 +526,43 @@ watch(debugMode, (val) => {
     removeAllDebugMarkers()
   }
 })
+
+function createWallMesh(
+  width: number,
+  height: number,
+  thickness: number = WALL_PARAMS.thickness,
+  color: number = WALL_PARAMS.color,
+  opacity: number = WALL_PARAMS.opacity,
+  roughness: number = WALL_PARAMS.roughness,
+  metallic: number = WALL_PARAMS.metallic
+): THREE.Mesh {
+  const material = new THREE.MeshStandardMaterial({ color, roughness, metallic: metallic, transparent: opacity < 1, opacity })
+  return new THREE.Mesh(new THREE.BoxGeometry(width, height, thickness), material)
+}
+
+function createFloorMesh(
+  width: number,
+  height: number,
+  color: number = FLOOR_PARAMS.color,
+  opacity: number = FLOOR_PARAMS.opacity,
+  roughness: number = FLOOR_PARAMS.roughness,
+  metallic: number = FLOOR_PARAMS.metallic
+): THREE.Mesh {
+  const material = new THREE.MeshStandardMaterial({ color, roughness, metallic: metallic, side: THREE.DoubleSide, transparent: opacity < 1, opacity })
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material)
+  mesh.rotation.x = -Math.PI / 2
+  mesh.position.y = 0
+  return mesh
+}
+
+function createResizeMarker(
+  color: number = MARKER_PARAMS.color,
+  size: number = MARKER_PARAMS.size
+): THREE.Mesh {
+  const markerGeometry = new THREE.BoxGeometry(size, size, size)
+  const markerMaterial = new THREE.MeshBasicMaterial({ color })
+  return new THREE.Mesh(markerGeometry, markerMaterial)
+}
 
 onMounted(() => {
   init()
