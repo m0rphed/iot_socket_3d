@@ -61,13 +61,12 @@ export class Room {
     frontWall.position.set(0, this.wallHeight / 2, -this.height / 2)
     frontWall.rotation.y = Math.PI
     this.walls.push(frontWall)
-    this.wallNormals.push(false) // наружу
     this.group.add(frontWall)
     const frontEdges = new THREE.EdgesGeometry(frontWall.geometry)
     const frontLine = new THREE.LineSegments(frontEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
     frontLine.position.copy(frontWall.position)
+    frontLine.rotation.copy(frontWall.rotation)
     this.group.add(frontLine)
-    this.addDebugAxes(frontWall)
     // Задняя стена (WALL 1)
     const backWall = new THREE.Mesh(
       new THREE.BoxGeometry(this.width, this.wallHeight, this.wallThickness),
@@ -75,13 +74,12 @@ export class Room {
     )
     backWall.position.set(0, this.wallHeight / 2, this.height / 2)
     this.walls.push(backWall)
-    this.wallNormals.push(true) // внутрь
     this.group.add(backWall)
     const backEdges = new THREE.EdgesGeometry(backWall.geometry)
     const backLine = new THREE.LineSegments(backEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
     backLine.position.copy(backWall.position)
+    backLine.rotation.copy(backWall.rotation)
     this.group.add(backLine)
-    this.addDebugAxes(backWall)
     // Левая стена (WALL 2)
     const leftWall = new THREE.Mesh(
       new THREE.BoxGeometry(this.height, this.wallHeight, this.wallThickness),
@@ -90,14 +88,12 @@ export class Room {
     leftWall.position.set(-this.width / 2, this.wallHeight / 2, 0)
     leftWall.rotation.y = -Math.PI / 2
     this.walls.push(leftWall)
-    this.wallNormals.push(false) // наружу
     this.group.add(leftWall)
     const leftEdges = new THREE.EdgesGeometry(leftWall.geometry)
     const leftLine = new THREE.LineSegments(leftEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
     leftLine.position.copy(leftWall.position)
-    leftLine.rotation.y = Math.PI / 2
+    leftLine.rotation.copy(leftWall.rotation)
     this.group.add(leftLine)
-    this.addDebugAxes(leftWall)
     // Правая стена (WALL 3)
     const rightWall = new THREE.Mesh(
       new THREE.BoxGeometry(this.height, this.wallHeight, this.wallThickness),
@@ -106,50 +102,12 @@ export class Room {
     rightWall.position.set(this.width / 2, this.wallHeight / 2, 0)
     rightWall.rotation.y = Math.PI / 2
     this.walls.push(rightWall)
-    this.wallNormals.push(true) // внутрь
     this.group.add(rightWall)
     const rightEdges = new THREE.EdgesGeometry(rightWall.geometry)
     const rightLine = new THREE.LineSegments(rightEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
     rightLine.position.copy(rightWall.position)
-    rightLine.rotation.y = Math.PI / 2
+    rightLine.rotation.copy(rightWall.rotation)
     this.group.add(rightLine)
-    this.addDebugAxes(rightWall)
-  }
-
-  // Визуализация локальных осей и центра для отладки
-  private addDebugAxes(wall: THREE.Mesh) {
-    // Центр
-    const sphereGeometry = new THREE.SphereGeometry(0.07, 12, 12)
-    const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 })
-    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-    sphere.position.set(0, 0, 0)
-    wall.add(sphere)
-    // Оси
-    const axisLength = 0.5
-    // X - красный
-    const xGeom = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(axisLength, 0, 0)
-    ])
-    const xMat = new THREE.LineBasicMaterial({ color: 0xff0000 })
-    const xLine = new THREE.Line(xGeom, xMat)
-    wall.add(xLine)
-    // Y - зелёный
-    const yGeom = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, axisLength, 0)
-    ])
-    const yMat = new THREE.LineBasicMaterial({ color: 0x00ff00 })
-    const yLine = new THREE.Line(yGeom, yMat)
-    wall.add(yLine)
-    // Z - синий
-    const zGeom = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, axisLength)
-    ])
-    const zMat = new THREE.LineBasicMaterial({ color: 0x0000ff })
-    const zLine = new THREE.Line(zGeom, zMat)
-    wall.add(zLine)
   }
 
   private createResizeMarkers() {

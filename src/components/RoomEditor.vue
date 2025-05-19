@@ -34,12 +34,15 @@
           {{ isDeleteMode ? 'Отменить удаление' : 'Удалить объект' }}
         </button>
       </div>
+      <button @click="debugMode = !debugMode" :class="{ active: debugMode }">
+        Debug
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Room } from './Room'
@@ -51,6 +54,7 @@ const currentMode = ref<'room' | 'object'>('room')
 const wallHeight = ref(2.5)
 const selectedObjectType = ref<WallObjectType>('socket')
 const isDeleteMode = ref(false)
+const debugMode = ref(false)
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -70,6 +74,7 @@ let initialSize = { width: 0, height: 0 }
 let ghostWallObject: WallObject | null = null
 let ghostWall: THREE.Mesh | null = null
 let debugSphere: THREE.Mesh | null = null
+let debugSceneObjects: THREE.Object3D[] = []
 
 const init = () => {
   if (!container.value) return
@@ -393,81 +398,136 @@ const updateWallHeight = () => {
   rooms.forEach(room => room.setWallHeight(wallHeight.value))
 }
 
-// Для debug-подписей
-function addWallLabel(wall: THREE.Mesh, index: number, scene: THREE.Scene) {
-  // Используем canvas для создания текстовой текстуры
-  const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 32
-  const ctx = canvas.getContext('2d')!
-  ctx.fillStyle = 'rgba(255,255,255,0.8)'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-  ctx.font = '24px Arial'
-  ctx.fillStyle = 'black'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText('WALL ' + index, canvas.width / 2, canvas.height / 2)
-  const texture = new THREE.CanvasTexture(canvas)
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
-  const sprite = new THREE.Sprite(material)
-  sprite.scale.set(0.7, 0.18, 1)
-  // Позиционируем подпись в центре стены чуть выше
-  const wallCenter = new THREE.Vector3()
-  wall.getWorldPosition(wallCenter)
-  sprite.position.copy(wallCenter)
-  sprite.position.y += 0.3
-  scene.add(sprite)
-}
-
-function addDebugRoomAndWallVisuals(room: Room, scene: THREE.Scene) {
-  // Центр комнаты — красная сфера
-  const roomCenter = new THREE.Vector3()
-  room.getObject().getWorldPosition(roomCenter)
-  const roomSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 12, 12),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-  )
-  roomSphere.position.copy(roomCenter)
-  scene.add(roomSphere)
-  // Для каждой стены — синяя сфера в центре и зелёная стрелка нормали
-  room.getWalls().forEach((wall, idx) => {
-    const wallCenter = new THREE.Vector3()
-    wall.getWorldPosition(wallCenter)
-    const wallSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.06, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0x0000ff })
+function addAllDebugMarkers() {
+  debugSceneObjects = []
+  rooms.forEach(room => {
+    // Красная сфера в центре комнаты
+    const roomCenter = new THREE.Vector3()
+    room.getObject().getWorldPosition(roomCenter)
+    const roomSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xff0000 })
     )
-    wallSphere.position.copy(wallCenter)
-    scene.add(wallSphere)
-    // Нормаль стены в мировых координатах
-    const localNormal = new THREE.Vector3(0, 0, 1)
-    const worldNormal = localNormal.applyQuaternion(wall.getWorldQuaternion(new THREE.Quaternion())).normalize()
-    // Смещаем начало стрелки чуть выше центра стены
-    const arrowStart = wallCenter.clone().add(new THREE.Vector3(0, 0.2, 0))
-    // Стрелка нормали (Line)
-    const arrowGeom = new THREE.BufferGeometry().setFromPoints([
-      arrowStart,
-      arrowStart.clone().add(worldNormal.clone().multiplyScalar(0.5))
-    ])
-    const arrowMat = new THREE.LineBasicMaterial({ color: 0x00ff00 })
-    const arrow = new THREE.Line(arrowGeom, arrowMat)
-    scene.add(arrow)
+    roomSphere.position.copy(roomCenter)
+    roomSphere.userData.isDebug = true
+    scene.add(roomSphere)
+    debugSceneObjects.push(roomSphere)
+    // Для каждой стены
+    room.getWalls().forEach((wall, idx) => {
+      // Подпись
+      const canvas = document.createElement('canvas')
+      canvas.width = 128
+      canvas.height = 32
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = 'rgba(255,255,255,0.8)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.font = '24px Arial'
+      ctx.fillStyle = 'black'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('WALL ' + idx, canvas.width / 2, canvas.height / 2)
+      const texture = new THREE.CanvasTexture(canvas)
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
+      const sprite = new THREE.Sprite(material)
+      sprite.scale.set(0.7, 0.18, 1)
+      const wallCenter = new THREE.Vector3()
+      wall.getWorldPosition(wallCenter)
+
+      // Смещение подписи вдоль нормали стены, чтобы она была поверх
+      const localNormal = new THREE.Vector3(0, 0, 1)
+      const worldNormal = localNormal.applyQuaternion(wall.getWorldQuaternion(new THREE.Quaternion())).normalize()
+      sprite.position.copy(wallCenter.add(worldNormal.clone().multiplyScalar(0.12)))
+      sprite.position.y += 0.4
+      sprite.userData.isDebug = true
+      scene.add(sprite)
+      debugSceneObjects.push(sprite)
+
+      // Стрелка нормали
+      const arrowStart = wallCenter.clone().add(new THREE.Vector3(0, 0.08, 0))
+      const arrowGeom = new THREE.BufferGeometry().setFromPoints([
+        arrowStart,
+        arrowStart.clone().add(worldNormal.clone().multiplyScalar(0.5))
+      ])
+      const arrowMat = new THREE.LineBasicMaterial({ color: 0x00ff00 })
+      const arrow = new THREE.Line(arrowGeom, arrowMat)
+      arrow.userData.isDebug = true
+      scene.add(arrow)
+      debugSceneObjects.push(arrow)
+      // Локальные оси и жёлтая сфера (дочерние объекты стены)
+      addDebugAxesToWall(wall)
+    })
   })
 }
 
+function addDebugAxesToWall(wall: THREE.Mesh) {
+  // Жёлтая сфера в локальных координатах стены
+  const sphereGeometry = new THREE.SphereGeometry(0.07, 12, 12)
+  const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 })
+  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+  sphere.position.set(0, 0, 0)
+  sphere.userData.isDebug = true
+  wall.add(sphere)
+  // Оси
+  const axisLength = 0.5
+  // X - красный
+  const xGeom = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(axisLength, 0, 0)
+  ])
+  const xMat = new THREE.LineBasicMaterial({ color: 0xff0000 })
+  const xLine = new THREE.Line(xGeom, xMat)
+  xLine.userData.isDebug = true
+  wall.add(xLine)
+  // Y - зелёный
+  const yGeom = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, axisLength, 0)
+  ])
+  const yMat = new THREE.LineBasicMaterial({ color: 0x00ff00 })
+  const yLine = new THREE.Line(yGeom, yMat)
+  yLine.userData.isDebug = true
+  wall.add(yLine)
+  // Z - синий
+  const zGeom = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, axisLength)
+  ])
+  const zMat = new THREE.LineBasicMaterial({ color: 0x0000ff })
+  const zLine = new THREE.Line(zGeom, zMat)
+  zLine.userData.isDebug = true
+  wall.add(zLine)
+}
+
+function removeAllDebugMarkers() {
+  // Удалить из сцены все объекты
+  debugSceneObjects.forEach(obj => {
+    if (obj.parent) obj.parent.remove(obj)
+    scene.remove(obj)
+  })
+  debugSceneObjects = []
+  // Удалить все дочерние debug-объекты у стен
+  rooms.forEach(room => {
+    room.getWalls().forEach(wall => {
+      const toRemove: THREE.Object3D[] = []
+      wall.children.forEach(child => {
+        if (child.userData && child.userData.isDebug) toRemove.push(child)
+      })
+      toRemove.forEach(child => wall.remove(child))
+    })
+  })
+}
+
+watch(debugMode, (val) => {
+  if (val) {
+    removeAllDebugMarkers()
+    addAllDebugMarkers()
+  } else {
+    removeAllDebugMarkers()
+  }
+})
+
 onMounted(() => {
   init()
-  // Добавляем debug-подписи и debug-визуализацию центров и нормалей
-  setTimeout(() => {
-    if (scene && rooms.length > 0) {
-      rooms.forEach(room => {
-        room.getWalls().forEach((wall, idx) => {
-          addWallLabel(wall, idx, scene)
-        })
-        addDebugRoomAndWallVisuals(room, scene)
-      })
-    }
-  }, 500)
   window.addEventListener('resize', () => {
     if (!container.value) return
     camera.aspect = container.value.clientWidth / container.value.clientHeight
