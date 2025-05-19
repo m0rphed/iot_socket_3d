@@ -11,6 +11,7 @@ export class Room {
   private height: number
   private wallHeight: number
   private wallThickness: number = 0.1
+  private wallNormals: boolean[] = [] // true если нормаль внутрь комнаты
 
   constructor(width: number = 4, height: number = 4, wallHeight: number = 2.5) {
     this.width = width
@@ -52,40 +53,44 @@ export class Room {
       transparent: true,
       opacity: 0.27
     })
-    // Передняя стена (минус Z)
+    // Передняя стена (WALL 0)
     const frontWall = new THREE.Mesh(
       new THREE.BoxGeometry(this.width, this.wallHeight, this.wallThickness),
       wallMaterial
     )
     frontWall.position.set(0, this.wallHeight / 2, -this.height / 2)
+    frontWall.rotation.y = Math.PI
     this.walls.push(frontWall)
+    this.wallNormals.push(false) // наружу
     this.group.add(frontWall)
     const frontEdges = new THREE.EdgesGeometry(frontWall.geometry)
     const frontLine = new THREE.LineSegments(frontEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
     frontLine.position.copy(frontWall.position)
     this.group.add(frontLine)
     this.addDebugAxes(frontWall)
-    // Задняя стена (плюс Z)
+    // Задняя стена (WALL 1)
     const backWall = new THREE.Mesh(
       new THREE.BoxGeometry(this.width, this.wallHeight, this.wallThickness),
       wallMaterial
     )
     backWall.position.set(0, this.wallHeight / 2, this.height / 2)
     this.walls.push(backWall)
+    this.wallNormals.push(true) // внутрь
     this.group.add(backWall)
     const backEdges = new THREE.EdgesGeometry(backWall.geometry)
     const backLine = new THREE.LineSegments(backEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
     backLine.position.copy(backWall.position)
     this.group.add(backLine)
     this.addDebugAxes(backWall)
-    // Левая стена (минус X)
+    // Левая стена (WALL 2)
     const leftWall = new THREE.Mesh(
       new THREE.BoxGeometry(this.height, this.wallHeight, this.wallThickness),
       wallMaterial
     )
     leftWall.position.set(-this.width / 2, this.wallHeight / 2, 0)
-    leftWall.rotation.y = Math.PI / 2
+    leftWall.rotation.y = -Math.PI / 2
     this.walls.push(leftWall)
+    this.wallNormals.push(false) // наружу
     this.group.add(leftWall)
     const leftEdges = new THREE.EdgesGeometry(leftWall.geometry)
     const leftLine = new THREE.LineSegments(leftEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
@@ -93,7 +98,7 @@ export class Room {
     leftLine.rotation.y = Math.PI / 2
     this.group.add(leftLine)
     this.addDebugAxes(leftWall)
-    // Правая стена (плюс X)
+    // Правая стена (WALL 3)
     const rightWall = new THREE.Mesh(
       new THREE.BoxGeometry(this.height, this.wallHeight, this.wallThickness),
       wallMaterial
@@ -101,6 +106,7 @@ export class Room {
     rightWall.position.set(this.width / 2, this.wallHeight / 2, 0)
     rightWall.rotation.y = Math.PI / 2
     this.walls.push(rightWall)
+    this.wallNormals.push(true) // внутрь
     this.group.add(rightWall)
     const rightEdges = new THREE.EdgesGeometry(rightWall.geometry)
     const rightLine = new THREE.LineSegments(rightEdges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 }))
@@ -221,5 +227,8 @@ export class Room {
       this.group.remove(wallObject.getObject())
       this.wallObjects.splice(index, 1)
     }
+  }
+  public getWallNormals(): boolean[] {
+    return this.wallNormals
   }
 }

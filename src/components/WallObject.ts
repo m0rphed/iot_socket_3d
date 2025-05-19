@@ -11,13 +11,15 @@ export class WallObject {
   private isDragging: boolean = false
   private dragStart: THREE.Vector2 = new THREE.Vector2()
   private isGhost: boolean
+  private zOffset: number | undefined
 
-  constructor(type: WallObjectType, wall: THREE.Mesh, position: number = 0.5, height: number = 0.5, isGhost: boolean = false) {
+  constructor(type: WallObjectType, wall: THREE.Mesh, position: number = 0.5, height: number = 0.5, isGhost: boolean = false, zOffset?: number) {
     this.type = type
     this.wall = wall
     this.position = position
     this.height = height
     this.isGhost = isGhost
+    this.zOffset = zOffset
 
     // Создание геометрии в зависимости от типа объекта
     let geometry: THREE.BufferGeometry
@@ -33,7 +35,7 @@ export class WallObject {
         opacity: isGhost ? 0.5 : 1.0
       })
     } else {
-      geometry = new THREE.BoxGeometry(0.8, 2, 0.25)
+      geometry = new THREE.BoxGeometry(0.8, 2, 0.2)
       material = new THREE.MeshStandardMaterial({ 
         color: 0xffac59,
         roughness: 0.7,
@@ -68,10 +70,10 @@ export class WallObject {
     if (this.type === 'door') {
       const doorHeight = 2
       y = (doorHeight / 2) - (wallSize.y / 2) // нижний край двери на полу
-      z = 0.13
+      z = 0 // дверь центрируется по толщине стены
     } else if (this.type === 'socket') {
       y = 0.25 - (wallSize.y / 2) // розетка на высоте 0.25м
-      z = 0.06
+      z = this.zOffset !== undefined ? this.zOffset : -0.06 // универсальное смещение
     }
     // Преобразуем локальные координаты в мировые
     const localPos = new THREE.Vector3(x, y, z)
