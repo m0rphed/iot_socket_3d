@@ -53,28 +53,47 @@ export class Wall extends SceneObject implements HasOutline {
    * @returns {boolean} true, если нормаль направлена внутрь комнаты
    */
   isNormalPointingInward(): boolean {
-    // Нормаль стены
-    const worldNormal = this.getWorldNormal()
-    
-    // Получаем родительскую комнату (центр комнаты)
-    const room = this.mesh.parent
-    if (!room) return false
-    
-    // Центр комнаты
-    const roomCenter = new THREE.Vector3()
-    room.getWorldPosition(roomCenter)
-    
-    // Центр стены
-    const wallCenter = new THREE.Vector3()
-    this.getWorldPosition(wallCenter)
-    
-    // Вектор от центра комнаты к центру стены
-    const toWall = wallCenter.clone().sub(roomCenter).normalize()
-    
-    // Скалярное произведение. Если < 0, нормаль направлена внутрь комнаты
-    const dot = worldNormal.dot(toWall)
-    
-    return dot < 0
+    try {
+      // Нормаль стены
+      const worldNormal = this.getWorldNormal()
+      
+      // Получаем родительскую комнату (центр комнаты)
+      const room = this.mesh.parent
+      if (!room) {
+        console.warn('Wall has no parent room in isNormalPointingInward')
+        return false
+      }
+      
+      // Центр комнаты
+      const roomCenter = new THREE.Vector3()
+      room.getWorldPosition(roomCenter)
+      
+      // Центр стены
+      const wallCenter = new THREE.Vector3()
+      this.getWorldPosition(wallCenter)
+      
+      // Вектор от центра комнаты к центру стены
+      const toWall = wallCenter.clone().sub(roomCenter).normalize()
+      
+      // Скалярное произведение. Если < 0, нормаль направлена внутрь комнаты
+      const dot = worldNormal.dot(toWall)
+      
+      // Для отладки можно добавить логирование
+      if (Math.abs(dot) < 0.1) {
+        console.warn('Wall normal is almost perpendicular to room center vector, may cause issues', {
+          wallId: this.uuid,
+          dot,
+          normal: worldNormal,
+          toWall
+        })
+      }
+      
+      return dot < 0
+    } catch (error) {
+      console.error('Error in isNormalPointingInward:', error)
+      // По умолчанию предполагаем, что нормаль направлена наружу
+      return false
+    }
   }
 
   add(obj: THREE.Object3D) {

@@ -22,6 +22,22 @@ export class WallObject extends SceneObject implements SelectableObject, HasOutl
   private zOffset: number | undefined
 
   constructor(type: WallObjectType, wall: Wall, position: number = 0.5, height: number = 0.5, isGhost: boolean = false, zOffset?: number) {
+    // Проверяем входные данные
+    if (!wall || !wall.mesh) {
+      console.error('Wall or wall.mesh is null in WallObject constructor');
+      throw new Error('Cannot create WallObject: wall is invalid');
+    }
+    
+    if (position < 0 || position > 1) {
+      console.warn(`Invalid position value: ${position}, clamping to [0,1] range`);
+      position = Math.max(0, Math.min(1, position));
+    }
+    
+    if (height <= 0) {
+      console.warn(`Invalid height value: ${height}, using default value`);
+      height = type === 'socket' ? 0.5 : 2;
+    }
+    
     const group = new THREE.Group()
     super(group)
     this.group = group

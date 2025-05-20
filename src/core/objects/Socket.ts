@@ -22,20 +22,32 @@ export class Socket extends WallObject {
    * @returns zOffset - смещение по Z
    */
   static calculateZOffset(wall: Wall, socketDepth: number): number {
+    // Проверяем, что стена существует и имеет mesh
+    if (!wall || !wall.mesh) {
+      console.error('Wall or wall.mesh is null in Socket.calculateZOffset');
+      return socketDepth / 2; // базовое смещение только на половину глубины розетки
+    }
+    
     // Получаем родительскую комнату
     const room = wall.mesh.parent;
     // По умолчанию смещаем внутрь
     if (!room) return WALL_PARAMS.thickness / 2 + socketDepth / 2;
     
-    // Определяем, направлена ли нормаль стены внутрь комнаты
-    const isInward = wall.isNormalPointingInward();
-    console.log(`${wall.uuid} - isInward: ${isInward}`)
-    
-    // Смещение на половину толщины стены + половина глубины розетки
-    // (берутся половины длин = т.к. это и есть расстояние от центра объекта до его края)
-    const offset = wall.getThickness() / 2 + socketDepth / 2;
-    
-    // Если нормаль направлена внутрь комнаты, смещаем розетку внутрь, иначе наружу
-    return isInward ? offset : -offset;
+    try {
+      // Определяем, направлена ли нормаль стены внутрь комнаты
+      const isInward = wall.isNormalPointingInward();
+      // console.log(`Socket ${wall.uuid} - isInward: ${isInward}`);
+      
+      // Смещение на половину толщины стены + половина глубины розетки
+      // (берутся половины длин = т.к. это и есть расстояние от центра объекта до его края)
+      const offset = wall.getThickness() / 2 + socketDepth / 2;
+      
+      // Если нормаль направлена внутрь комнаты, смещаем розетку внутрь, иначе наружу
+      return isInward ? offset : -offset;
+    } catch (error) {
+      console.error('Error calculating socket offset:', error);
+      // Безопасное значение по умолчанию
+      return wall.getThickness() / 2 + socketDepth / 2;
+    }
   }
 } 

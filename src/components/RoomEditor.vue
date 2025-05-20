@@ -58,6 +58,7 @@ import { WALL_PARAMS, FLOOR_PARAMS, MARKER_PARAMS, DEBUG_PARAMS } from '../param
 import { SelectionManager } from '../core/managers/SelectionManager'
 import { Socket } from '../core/objects/Socket'
 import { Door } from '../core/objects/Door'
+import { DebugHelper } from '../core/utils/DebugHelper'
 
 const container = ref<HTMLElement | null>(null)
 const currentMode = ref<'room' | 'object'>('room')
@@ -84,7 +85,7 @@ let isResizing = false
 let dragStart = new THREE.Vector2()
 let initialSize = { width: 0, height: 0 }
 let debugSphere: THREE.Mesh | null = null
-let debugSceneObjects: THREE.Object3D[] = []
+let debugHelper: DebugHelper
 
 const selectionManager = new SelectionManager()
 const sceneManager = new SceneManager()
@@ -101,6 +102,9 @@ const init = () => {
   
   // Устанавливаем сцену в SceneManager
   sceneManager.setScene(scene)
+  
+  // Инициализируем DebugHelper
+  debugHelper = new DebugHelper(scene)
 
   // Настройка камеры
   camera = new THREE.PerspectiveCamera(
@@ -158,14 +162,9 @@ const addRoom = () => {
     const wallMesh = new THREE.Mesh(wallGeom, wallMat)
     wallMeshes.push(wallMesh)
   }
-  // Позиционируем стены (пример, можно доработать)
-  wallMeshes[0].position.set(0, wallHeight.value / 2, -2)
-  wallMeshes[1].position.set(2, wallHeight.value / 2, 0)
-  wallMeshes[1].rotation.y = Math.PI / 2
-  wallMeshes[2].position.set(0, wallHeight.value / 2, 2)
-  wallMeshes[2].rotation.y = Math.PI
-  wallMeshes[3].position.set(-2, wallHeight.value / 2, 0)
-  wallMeshes[3].rotation.y = -Math.PI / 2
+  
+  // Позиционируем стены с установкой правильного направления нормали внутрь комнаты
+  positionWallsWithInwardNormals(wallMeshes, 4, 4, wallHeight.value)
 
   // Создаём объекты Wall
   const walls = wallMeshes.map(mesh => new Wall(mesh))
@@ -189,89 +188,47 @@ const addRoom = () => {
   sceneManager.add(room)
 }
 
+/**
+ * Устанавливает позиции и повороты стен так, чтобы нормали были направлены внутрь комнаты
+ * @param walls Массив мешей стен
+ * @param width Ширина комнаты
+ * @param height Глубина комнаты
+ * @param wallHeight Высота стен
+ */
+const positionWallsWithInwardNormals = (
+  walls: THREE.Mesh[],
+  width: number,
+  height: number,
+  wallHeight: number
+) => {
+  if (walls.length !== 4) {
+    console.error('Ожидается 4 стены для позиционирования')
+    return
+  }
+
+  // Передняя стена
+  walls[0].position.set(0, wallHeight / 2, -height / 2)
+  walls[0].rotation.y = 0 // Нормаль уже смотрит внутрь
+
+  // Правая стена (нормаль внутрь = поворот -90 градусов)
+  walls[1].position.set(width / 2, wallHeight / 2, 0)
+  walls[1].rotation.y = -Math.PI / 2 // Поворот на -90 градусов для направления нормали внутрь
+
+  // Задняя стена
+  walls[2].position.set(0, wallHeight / 2, height / 2)
+  walls[2].rotation.y = Math.PI // Поворот на 180 градусов для направления нормали внутрь
+
+  // Левая стена (нормаль внутрь = поворот 90 градусов)
+  walls[3].position.set(-width / 2, wallHeight / 2, 0)
+  walls[3].rotation.y = Math.PI / 2 // Поворот на 90 градусов для направления нормали внутрь
+}
+
 const addInnerRoomObject = (type: WallObjectType, wall: Wall, pos: number, room: RoomClass) => {
   if (type === 'socket') {
     return room.addSocket(wall, pos)
   } else {
     return room.addDoor(wall, pos)
   }
-}
-
-// Функция поиска WallObject по parent-цепочке
-function findWallObjectByObject(object: THREE.Object3D, wallObjects: WallObject[]): WallObject | null {
-  let current: THREE.Object3D | null = object;
-  while (current) {
-    const found = wallObjects.find(w => w.getObject() === current);
-    if (found) return found;
-    current = current.parent;
-  }
-  return null;
-}
-
-const getAllWallObjectGroups = () => rooms.flatMap(room => room.getWallObjects().map(obj => obj.getObject()))
-
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ВЫДЕЛЕНИЯ ---
-
-function selectWallObjectRaycast(mouse: THREE.Vector2, camera: THREE.Camera): WallObject | null {
-  const allWallObjectGroups = getAllWallObjectGroups()
-  raycaster.setFromCamera(mouse, camera)
-  const intersects = raycaster.intersectObjects(allWallObjectGroups, true)
-  if (intersects.length > 0) {
-    const intersectedObject = intersects[0].object
-    for (const room of rooms) {
-      const wallObject = findWallObjectByObject(intersectedObject, room.getWallObjects())
-      if (wallObject) return wallObject
-    }
-  }
-  return null
-}
-
-function selectWallObjectBoundingBox(mouseEvent: MouseEvent, camera: THREE.Camera): WallObject | null {
-  // Получаем все wallObject'ы
-  const allWallObjects = rooms.flatMap(room => room.getWallObjects())
-  if (!container.value) return null
-  const rect = container.value.getBoundingClientRect()
-  // mouseEvent.clientX/Y — абсолютные координаты мыши
-  for (const wallObject of allWallObjects) {
-    const mesh = wallObject.getMesh()
-    // Получаем 8 углов bounding box в world
-    mesh.geometry.computeBoundingBox()
-    const bbox = mesh.geometry.boundingBox
-    if (!bbox) continue
-    const points = [
-      new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.min.z),
-      new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.max.z),
-      new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.min.z),
-      new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.max.z),
-      new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.min.z),
-      new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.max.z),
-      new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.min.z),
-      new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.max.z),
-    ]
-    // Переводим в world
-    points.forEach(p => mesh.localToWorld(p))
-    // Проецируем в экранные координаты
-    const screenPoints = points.map(p => {
-      const projected = p.clone().project(camera)
-      return {
-        x: (projected.x + 1) / 2 * rect.width + rect.left,
-        y: (-projected.y + 1) / 2 * rect.height + rect.top
-      }
-    })
-    // Находим screen-space bounding box
-    const minX = Math.min(...screenPoints.map(p => p.x))
-    const maxX = Math.max(...screenPoints.map(p => p.x))
-    const minY = Math.min(...screenPoints.map(p => p.y))
-    const maxY = Math.max(...screenPoints.map(p => p.y))
-    // Проверяем попадание мыши
-    if (
-      mouseEvent.clientX >= minX && mouseEvent.clientX <= maxX &&
-      mouseEvent.clientY >= minY && mouseEvent.clientY <= maxY
-    ) {
-      return wallObject
-    }
-  }
-  return null
 }
 
 // --- МОДИФИЦИРОВАННЫЙ onMouseDown ---
@@ -284,10 +241,20 @@ const onMouseDown = (event: MouseEvent) => {
   if (isSelectMode.value) {
     let foundWallObject: WallObject | null = null
     if (selectionMethod === 'raycast') {
-      foundWallObject = selectWallObjectRaycast(mouse, camera)
+      foundWallObject = selectionManager.selectObjectByRaycast(
+        mouse, 
+        camera, 
+        selectionManager.getAllWallObjectGroups(), 
+        raycaster
+      )
     } else if (selectionMethod === 'boundingBox') {
       const allWallObjects = rooms.flatMap(room => room.getWallObjects())
-      foundWallObject = selectionManager.findObjectByBoundingBox(event, camera, allWallObjects, container.value) as WallObject
+      foundWallObject = selectionManager.selectObjectByBoundingBox(
+        event, 
+        camera, 
+        allWallObjects, 
+        container.value
+      )
     }
     
     if (foundWallObject) {
@@ -328,7 +295,7 @@ const onMouseDown = (event: MouseEvent) => {
     if (isDeleteMode.value) {
       // Найти комнату, которой принадлежит объект
       for (const room of rooms) {
-        const wallObject = findWallObjectByObject(event.target as THREE.Object3D, room.getWallObjects())
+        const wallObject = selectionManager.findWallObjectByObject(event.target as THREE.Object3D, room.getWallObjects())
         if (wallObject) {
           // Визуально выделить объект (например, временно изменить цвет)
           const mesh = wallObject.getMesh()
@@ -405,11 +372,20 @@ const onMouseMove = (event: MouseEvent) => {
   if (isSelectMode.value) {
     let found: WallObject | null = null
     if (selectionMethod === 'raycast') {
-      const allWallObjectGroups = getAllWallObjectGroups()
-      found = selectWallObjectRaycast(mouse, camera)
+      found = selectionManager.selectObjectByRaycast(
+        mouse, 
+        camera, 
+        selectionManager.getAllWallObjectGroups(), 
+        raycaster
+      )
     } else if (selectionMethod === 'boundingBox') {
       const allWallObjects = rooms.flatMap(room => room.getWallObjects())
-      found = selectionManager.findObjectByBoundingBox(event, camera, allWallObjects, container.value) as WallObject
+      found = selectionManager.selectObjectByBoundingBox(
+        event, 
+        camera, 
+        allWallObjects, 
+        container.value
+      )
     }
     
     if (found) {
@@ -547,135 +523,16 @@ const updateWallHeight = () => {
   
   // Обновляем debug маркеры, если режим debug включен
   if (debugMode.value) {
-    removeAllDebugMarkers()
-    addAllDebugMarkers()
+    debugHelper.removeAllDebugMarkers()
+    debugHelper.addDebugMarkersForRooms(rooms)
   }
-}
-
-function addAllDebugMarkers() {
-  debugSceneObjects = []
-  rooms.forEach(room => {
-    // Красная сфера в центре комнаты
-    const roomCenter = new THREE.Vector3()
-    room.getObject().getWorldPosition(roomCenter)
-    const roomSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xff0000 })
-    )
-    roomSphere.position.copy(roomCenter)
-    roomSphere.userData.isDebug = true
-    scene.add(roomSphere)
-    debugSceneObjects.push(roomSphere)
-    // Для каждой стены
-    room.getWalls().forEach((wall, idx) => {
-      // Подпись
-      const canvas = document.createElement('canvas')
-      canvas.width = 128
-      canvas.height = 32
-      const ctx = canvas.getContext('2d')!
-      ctx.fillStyle = 'rgba(255,255,255,0.8)'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.font = '24px Arial'
-      ctx.fillStyle = 'black'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText('WALL ' + idx, canvas.width / 2, canvas.height / 2)
-      const texture = new THREE.CanvasTexture(canvas)
-      const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
-      const sprite = new THREE.Sprite(material)
-      sprite.scale.set(0.7, 0.18, 1)
-      const wallCenter = new THREE.Vector3()
-      wall.getWorldPosition(wallCenter)
-
-      // Смещение подписи вдоль нормали стены, чтобы она была поверх
-      const worldNormal = wall.getWorldNormal()
-      sprite.position.copy(wallCenter.add(worldNormal.clone().multiplyScalar(0.12)))
-      sprite.position.y += 0.4
-      sprite.userData.isDebug = true
-      scene.add(sprite)
-      debugSceneObjects.push(sprite)
-
-      // Стрелка нормали
-      const arrowStart = wallCenter.clone().add(new THREE.Vector3(0, 0.08, 0))
-      const arrowGeom = new THREE.BufferGeometry().setFromPoints([
-        arrowStart,
-        arrowStart.clone().add(worldNormal.clone().multiplyScalar(0.5))
-      ])
-      const arrowMat = new THREE.LineBasicMaterial({ color: 0x00ff00 })
-      const arrow = new THREE.Line(arrowGeom, arrowMat)
-      arrow.userData.isDebug = true
-      scene.add(arrow)
-      debugSceneObjects.push(arrow)
-      // Локальные оси и жёлтая сфера (дочерние объекты стены)
-      addDebugAxesToWall(wall)
-    })
-  })
-}
-
-function addDebugAxesToWall(wall: Wall) {
-  // Жёлтая сфера в локальных координатах стены
-  const sphereGeometry = new THREE.SphereGeometry(0.07, 12, 12)
-  const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 })
-  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-  sphere.position.set(0, 0, 0)
-  sphere.userData.isDebug = true
-  wall.mesh.add(sphere)
-  // Оси
-  const axisLength = 0.5
-  // X - красный
-  const xGeom = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(axisLength, 0, 0)
-  ])
-  const xMat = new THREE.LineBasicMaterial({ color: 0xff0000 })
-  const xLine = new THREE.Line(xGeom, xMat)
-  xLine.userData.isDebug = true
-  wall.mesh.add(xLine)
-  // Y - зелёный
-  const yGeom = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, axisLength, 0)
-  ])
-  const yMat = new THREE.LineBasicMaterial({ color: 0x00ff00 })
-  const yLine = new THREE.Line(yGeom, yMat)
-  yLine.userData.isDebug = true
-  wall.mesh.add(yLine)
-  // Z - синий
-  const zGeom = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, axisLength)
-  ])
-  const zMat = new THREE.LineBasicMaterial({ color: 0x0000ff })
-  const zLine = new THREE.Line(zGeom, zMat)
-  zLine.userData.isDebug = true
-  wall.mesh.add(zLine)
-}
-
-function removeAllDebugMarkers() {
-  // Удалить из сцены все объекты
-  debugSceneObjects.forEach(obj => {
-    if (obj.parent) obj.parent.remove(obj)
-    scene.remove(obj)
-  })
-  debugSceneObjects = []
-  // Удалить все дочерние debug-объекты у стен
-  rooms.forEach(room => {
-    room.getWalls().forEach(wall => {
-      const toRemove: THREE.Object3D[] = []
-      wall.mesh.children.forEach(child => {
-        if (child.userData && child.userData.isDebug) toRemove.push(child)
-      })
-      toRemove.forEach(child => wall.mesh.remove(child))
-    })
-  })
 }
 
 watch(debugMode, (val) => {
   if (val) {
-    removeAllDebugMarkers()
-    addAllDebugMarkers()
+    debugHelper.addDebugMarkersForRooms(rooms)
   } else {
-    removeAllDebugMarkers()
+    debugHelper.removeAllDebugMarkers()
   }
 })
 
@@ -710,6 +567,7 @@ onUnmounted(() => {
   // Очищаем сцену и менеджеры
   sceneManager.clear()
   selectionManager.clear()
+  if (debugHelper) debugHelper.removeAllDebugMarkers()
 })
 </script>
 

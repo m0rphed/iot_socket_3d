@@ -32,6 +32,12 @@ export class Room extends SceneObject {
   }
 
   setSize(width: number, height: number) {
+    // Проверка валидности входных данных
+    if (!isFinite(width) || width <= 0 || !isFinite(height) || height <= 0) {
+      console.error(`Invalid room dimensions: width=${width}, height=${height}`);
+      return;
+    }
+    
     const oldWidth = this.width
     const oldHeight = this.height
     this.width = width
@@ -125,6 +131,12 @@ export class Room extends SceneObject {
   }
 
   setWallHeight(height: number) {
+    // Проверка валидности входных данных
+    if (!isFinite(height) || height <= 0) {
+      console.error(`Invalid wall height: ${height}`);
+      return;
+    }
+    
     this.wallHeight = height
     
     // Обновляем геометрии стен

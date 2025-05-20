@@ -257,4 +257,128 @@ export class SelectionManager {
     
     return null
   }
+
+  /**
+   * Находит WallObject по объекту Three.js, проходя вверх по иерархии родителей
+   * @param object Объект Three.js, для которого ищем соответствующий WallObject
+   * @param wallObjects Массив доступных WallObject для поиска
+   * @returns Найденный WallObject или null
+   */
+  findWallObjectByObject(object: THREE.Object3D, wallObjects: WallObject[]): WallObject | null {
+    let current: THREE.Object3D | null = object;
+    while (current) {
+      const found = wallObjects.find(w => w.getObject() === current);
+      if (found) return found;
+      current = current.parent;
+    }
+    return null;
+  }
+
+  /**
+   * Находит объект с помощью raycasting
+   * @param mouse Координаты мыши в нормализованном формате (-1 до 1)
+   * @param camera Камера
+   * @param objects Массив доступных объектов для проверки
+   * @param raycaster Raycaster для выполнения проверки
+   * @returns Найденный объект или null
+   */
+  selectObjectByRaycast(
+    mouse: THREE.Vector2, 
+    camera: THREE.Camera, 
+    objects: THREE.Object3D[], 
+    raycaster: THREE.Raycaster
+  ): WallObject | null {
+    raycaster.setFromCamera(mouse, camera)
+    const intersects = raycaster.intersectObjects(objects, true)
+    if (intersects.length > 0) {
+      const intersectedObject = intersects[0].object
+      // Если у нас есть массив доступных WallObject объектов, ищем среди них
+      if (this.sceneManager) {
+        const rooms = this.sceneManager.objects.filter(obj => 'getWallObjects' in obj && typeof (obj as any).getWallObjects === 'function')
+        for (const room of rooms) {
+          // Используем as any, так как TypeScript не знает о методе getWallObjects
+          const wallObjects = (room as any).getWallObjects() as WallObject[]
+          const wallObject = this.findWallObjectByObject(intersectedObject, wallObjects)
+          if (wallObject) return wallObject
+        }
+      }
+    }
+    return null
+  }
+
+  /**
+   * Находит объект с помощью проекции bounding box
+   * @param mouseEvent Событие мыши
+   * @param camera Камера
+   * @param wallObjects Массив объектов для проверки
+   * @param container Контейнер рендерера
+   * @returns Найденный объект или null
+   */
+  selectObjectByBoundingBox(
+    mouseEvent: MouseEvent, 
+    camera: THREE.Camera, 
+    wallObjects: WallObject[],
+    container: HTMLElement
+  ): WallObject | null {
+    const rect = container.getBoundingClientRect()
+    for (const wallObject of wallObjects) {
+      const mesh = wallObject.getMesh()
+      // Получаем 8 углов bounding box в world
+      mesh.geometry.computeBoundingBox()
+      const bbox = mesh.geometry.boundingBox
+      if (!bbox) continue
+      const points = [
+        new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.min.z),
+        new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.max.z),
+        new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.min.z),
+        new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.max.z),
+        new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.min.z),
+        new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.max.z),
+        new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.min.z),
+        new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.max.z),
+      ]
+      // Переводим в world
+      points.forEach(p => mesh.localToWorld(p))
+      // Проецируем в экранные координаты
+      const screenPoints = points.map(p => {
+        const projected = p.clone().project(camera)
+        return {
+          x: (projected.x + 1) / 2 * rect.width + rect.left,
+          y: (-projected.y + 1) / 2 * rect.height + rect.top
+        }
+      })
+      // Находим screen-space bounding box
+      const minX = Math.min(...screenPoints.map(p => p.x))
+      const maxX = Math.max(...screenPoints.map(p => p.x))
+      const minY = Math.min(...screenPoints.map(p => p.y))
+      const maxY = Math.max(...screenPoints.map(p => p.y))
+      // Проверяем попадание мыши
+      if (
+        mouseEvent.clientX >= minX && mouseEvent.clientX <= maxX &&
+        mouseEvent.clientY >= minY && mouseEvent.clientY <= maxY
+      ) {
+        return wallObject
+      }
+    }
+    return null
+  }
+
+  /**
+   * Получает все объекты для выделения из всех комнат
+   * @returns Массив объектов Three.js для всех WallObject
+   */
+  getAllWallObjectGroups(): THREE.Object3D[] {
+    if (!this.sceneManager) return []
+    
+    // Фильтруем объекты, которые имеют метод getWallObjects
+    const rooms = this.sceneManager.objects.filter(obj => 
+      'getWallObjects' in obj && typeof (obj as any).getWallObjects === 'function'
+    )
+    
+    // Собираем все WallObject из всех комнат
+    return rooms.flatMap(room => {
+      const wallObjects = (room as any).getWallObjects() as WallObject[]
+      return wallObjects.map(obj => obj.getObject())
+    })
+  }
 } 
