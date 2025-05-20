@@ -37,6 +37,9 @@
       <button @click="debugMode = !debugMode" :class="{ active: debugMode }">
         Debug
       </button>
+      <button @click="isSelectMode = !isSelectMode" :class="{ active: isSelectMode }">
+        Выделить объекты
+      </button>
     </div>
   </div>
 </template>
@@ -56,6 +59,8 @@ const wallHeight = ref(2.5)
 const selectedObjectType = ref<WallObjectType>('socket')
 const isDeleteMode = ref(false)
 const debugMode = ref(false)
+const isSelectMode = ref(true)
+let selectionMethod: 'raycast' | 'boundingBox' = 'boundingBox' // можно переключать для теста
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -68,6 +73,7 @@ let mouse: THREE.Vector2
 let selectedRoom: Room | null = null
 let selectedMarker: THREE.Mesh | null = null
 let selectedWallObject: WallObject | null = null
+let selectedWallObjectOrigColor: number | null = null
 let isDragging = false
 let isResizing = false
 let dragStart = new THREE.Vector2()
@@ -76,6 +82,8 @@ let ghostWallObject: WallObject | null = null
 let ghostWall: THREE.Mesh | null = null
 let debugSphere: THREE.Mesh | null = null
 let debugSceneObjects: THREE.Object3D[] = []
+let hoveredWallObject: WallObject | null = null
+let selectedWallObjects: WallObject[] = []
 
 const init = () => {
   if (!container.value) return
@@ -157,67 +165,181 @@ const addInnerRoomObject = (type: WallObjectType, wall: THREE.Mesh, pos: number,
   return room.addWallObject(type, wall, pos, height, zOffset)
 }
 
+// Функция поиска WallObject по parent-цепочке
+function findWallObjectByObject(object: THREE.Object3D, wallObjects: WallObject[]): WallObject | null {
+  let current: THREE.Object3D | null = object;
+  while (current) {
+    const found = wallObjects.find(w => w.getObject() === current);
+    if (found) return found;
+    current = current.parent;
+  }
+  return null;
+}
+
+const getAllWallObjectGroups = () => rooms.flatMap(room => room.getWallObjects().map(obj => obj.getObject()))
+
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ВЫДЕЛЕНИЯ ---
+
+function selectWallObjectRaycast(mouse: THREE.Vector2, camera: THREE.Camera): WallObject | null {
+  const allWallObjectGroups = getAllWallObjectGroups()
+  raycaster.setFromCamera(mouse, camera)
+  const intersects = raycaster.intersectObjects(allWallObjectGroups, true)
+  if (intersects.length > 0) {
+    const intersectedObject = intersects[0].object
+    for (const room of rooms) {
+      const wallObject = findWallObjectByObject(intersectedObject, room.getWallObjects())
+      if (wallObject) return wallObject
+    }
+  }
+  return null
+}
+
+function selectWallObjectBoundingBox(mouseEvent: MouseEvent, camera: THREE.Camera): WallObject | null {
+  // Получаем все wallObject'ы
+  const allWallObjects = rooms.flatMap(room => room.getWallObjects())
+  if (!container.value) return null
+  const rect = container.value.getBoundingClientRect()
+  // mouseEvent.clientX/Y — абсолютные координаты мыши
+  for (const wallObject of allWallObjects) {
+    const mesh = wallObject.getMesh()
+    // Получаем 8 углов bounding box в world
+    mesh.geometry.computeBoundingBox()
+    const bbox = mesh.geometry.boundingBox
+    if (!bbox) continue
+    const points = [
+      new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.min.z),
+      new THREE.Vector3(bbox.min.x, bbox.min.y, bbox.max.z),
+      new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.min.z),
+      new THREE.Vector3(bbox.min.x, bbox.max.y, bbox.max.z),
+      new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.min.z),
+      new THREE.Vector3(bbox.max.x, bbox.min.y, bbox.max.z),
+      new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.min.z),
+      new THREE.Vector3(bbox.max.x, bbox.max.y, bbox.max.z),
+    ]
+    // Переводим в world
+    points.forEach(p => mesh.localToWorld(p))
+    // Проецируем в экранные координаты
+    const screenPoints = points.map(p => {
+      const projected = p.clone().project(camera)
+      return {
+        x: (projected.x + 1) / 2 * rect.width + rect.left,
+        y: (-projected.y + 1) / 2 * rect.height + rect.top
+      }
+    })
+    // Находим screen-space bounding box
+    const minX = Math.min(...screenPoints.map(p => p.x))
+    const maxX = Math.max(...screenPoints.map(p => p.x))
+    const minY = Math.min(...screenPoints.map(p => p.y))
+    const maxY = Math.max(...screenPoints.map(p => p.y))
+    // Проверяем попадание мыши
+    if (
+      mouseEvent.clientX >= minX && mouseEvent.clientX <= maxX &&
+      mouseEvent.clientY >= minY && mouseEvent.clientY <= maxY
+    ) {
+      return wallObject
+    }
+  }
+  return null
+}
+
+// --- МОДИФИЦИРОВАННЫЙ onMouseDown ---
 const onMouseDown = (event: MouseEvent) => {
   const rect = container.value?.getBoundingClientRect()
   if (!rect) return
-
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 
-  raycaster.setFromCamera(mouse, camera)
-  const intersects = raycaster.intersectObjects(scene.children, true)
-
-  if (intersects.length > 0) {
-    const intersectedObject = intersects[0].object
-
-    if (currentMode.value === 'room') {
-      // Проверяем, является ли объект маркером изменения размера
-      const marker = intersectedObject as THREE.Mesh
-      const room = rooms.find(room => room.getResizeMarkers().includes(marker))
-      
-      if (room) {
-        selectedRoom = room
-        selectedMarker = marker
-        isResizing = true
-        initialSize = room.getSize()
-        controls.enabled = false
+  let foundWallObject: WallObject | null = null
+  if (isSelectMode.value) {
+    if (selectionMethod === 'raycast') {
+      foundWallObject = selectWallObjectRaycast(mouse, camera)
+    } else if (selectionMethod === 'boundingBox') {
+      foundWallObject = selectWallObjectBoundingBox(event, camera)
+    }
+    if (foundWallObject) {
+      if (selectedWallObjects.includes(foundWallObject)) {
+        deselectWallObject(foundWallObject)
       } else {
-        // Если это не маркер, проверяем, является ли объект частью комнаты
-        const roomObject = intersectedObject.parent
-        selectedRoom = rooms.find(room => room.getObject() === roomObject) || null
-        if (selectedRoom) {
-          isDragging = true
-          dragStart.set(mouse.x, mouse.y)
-          controls.enabled = false
+        selectWallObject(foundWallObject)
+      }
+    } else {
+      clearAllSelections()
+    }
+    return
+  }
+
+  if (currentMode.value === 'room') {
+    // Проверяем, является ли объект маркером изменения размера
+    const marker = event.target as THREE.Mesh
+    const room = rooms.find(room => room.getResizeMarkers().includes(marker))
+    
+    if (room) {
+      selectedRoom = room
+      selectedMarker = marker
+      isResizing = true
+      initialSize = room.getSize()
+      controls.enabled = false
+    } else {
+      // Если это не маркер, проверяем, является ли объект частью комнаты
+      const roomObject = event.target as THREE.Object3D
+      selectedRoom = rooms.find(room => room.getObject() === roomObject) || null
+      if (selectedRoom) {
+        isDragging = true
+        dragStart.set(mouse.x, mouse.y)
+        controls.enabled = false
+      }
+    }
+  } else if (currentMode.value === 'object') {
+    // Новый режим удаления
+    if (isDeleteMode.value) {
+      // Найти комнату, которой принадлежит объект
+      for (const room of rooms) {
+        const wallObject = findWallObjectByObject(event.target as THREE.Object3D, room.getWallObjects())
+        if (wallObject) {
+          // Визуально выделить объект (например, временно изменить цвет)
+          const mesh = wallObject.getMesh()
+          const origColor = mesh.material instanceof THREE.MeshStandardMaterial ? mesh.material.color.getHex() : null
+          if (mesh.material instanceof THREE.MeshStandardMaterial) {
+            mesh.material.color.set(0xff4444)
+            setTimeout(() => {
+              mesh.material.color.set(origColor)
+              // Удалить объект
+              room.removeWallObject(wallObject)
+            }, 180)
+          } else {
+            // Просто удалить, если не удалось подсветить
+            room.removeWallObject(wallObject)
+          }
+          break
         }
       }
-    } else if (currentMode.value === 'object') {
-      // Проверяем, является ли объект стеной или объектом на стене
-      const wall = intersectedObject as THREE.Mesh
-      const room = rooms.find(room => room.getWalls().includes(wall))
+      return
+    }
+    // Проверяем, является ли объект стеной или объектом на стене
+    const wall = event.target as THREE.Mesh
+    const room = rooms.find(room => room.getWalls().includes(wall))
+    
+    if (room) {
+      // Проверяем, не является ли объект частью существующего объекта на стене
+      const wallObject = room.getWallObjects().find(obj => obj.getObject() === event.target)
       
-      if (room) {
-        // Проверяем, не является ли объект частью существующего объекта на стене
-        const wallObject = room.getWallObjects().find(obj => obj.getObject() === intersectedObject)
+      if (wallObject) {
+        if (isDeleteMode.value) {
+          // Удаляем объект
+          room.removeWallObject(wallObject)
+        } else {
+          // Начинаем перетаскивание существующего объекта
+          selectedWallObject = wallObject
+          selectedWallObject.startDrag(mouse)
+          controls.enabled = false
+        }
+      } else if (!isDeleteMode.value) {
+        // Добавляем новый объект на стену
+        const newWallObject = room.addWallObject(selectedObjectType.value, wall)
         
-        if (wallObject) {
-          if (isDeleteMode.value) {
-            // Удаляем объект
-            room.removeWallObject(wallObject)
-          } else {
-            // Начинаем перетаскивание существующего объекта
-            selectedWallObject = wallObject
-            selectedWallObject.startDrag(mouse)
-            controls.enabled = false
-          }
-        } else if (!isDeleteMode.value) {
-          // Добавляем новый объект на стену
-          const newWallObject = room.addWallObject(selectedObjectType.value, wall)
-          
-          // Если это дверь, размещаем её на уровне пола
-          if (selectedObjectType.value === 'door') {
-            newWallObject.setHeight(1) // Высота двери 2 метра, центр на высоте 1 метр
-          }
+        // Если это дверь, размещаем её на уровне пола
+        if (selectedObjectType.value === 'door') {
+          newWallObject.setHeight(1) // Высота двери 2 метра, центр на высоте 1 метр
         }
       }
     }
@@ -242,12 +364,30 @@ const onMouseDown = (event: MouseEvent) => {
   }
 }
 
+// --- МОДИФИЦИРОВАННЫЙ onMouseMove (hover для selectMode) ---
 const onMouseMove = (event: MouseEvent) => {
   if (!container.value) return
-
   const rect = container.value.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+  if (isSelectMode.value) {
+    let found: WallObject | null = null
+    if (selectionMethod === 'raycast') {
+      found = selectWallObjectRaycast(mouse, camera)
+    } else if (selectionMethod === 'boundingBox') {
+      found = selectWallObjectBoundingBox(event, camera)
+    }
+    if (found && found !== hoveredWallObject) {
+      if (hoveredWallObject) unhoverWallObject(hoveredWallObject)
+      if (found !== selectedWallObject) hoverWallObject(found)
+      hoveredWallObject = found
+    }
+    if (!found && hoveredWallObject) {
+      unhoverWallObject(hoveredWallObject)
+      hoveredWallObject = null
+    }
+    return
+  }
 
   if (isDragging && selectedRoom) {
     const deltaX = mouse.x - dragStart.x
@@ -527,41 +667,85 @@ watch(debugMode, (val) => {
   }
 })
 
-function createWallMesh(
-  width: number,
-  height: number,
-  thickness: number = WALL_PARAMS.thickness,
-  color: number = WALL_PARAMS.color,
-  opacity: number = WALL_PARAMS.opacity,
-  roughness: number = WALL_PARAMS.roughness,
-  metallic: number = WALL_PARAMS.metallic
-): THREE.Mesh {
-  const material = new THREE.MeshStandardMaterial({ color, roughness, metallic: metallic, transparent: opacity < 1, opacity })
-  return new THREE.Mesh(new THREE.BoxGeometry(width, height, thickness), material)
+watch(isSelectMode, (val) => {
+  if (val) {
+    // Убрать ghost-объект при входе в режим выделения
+    if (ghostWallObject) {
+      scene.remove(ghostWallObject.getObject())
+      ghostWallObject = null
+      ghostWall = null
+    }
+  } else {
+    // Снять hover/выделение при выходе из режима
+    if (hoveredWallObject) {
+      unhoverWallObject(hoveredWallObject)
+      hoveredWallObject = null
+    }
+    clearAllSelections()
+  }
+})
+
+function hoverWallObject(wallObject: WallObject) {
+  const mesh = wallObject.getMesh()
+  if (mesh.material instanceof THREE.MeshStandardMaterial) {
+    mesh.material.emissive.set(0x44aaff)
+    mesh.material.emissiveIntensity = 0.7
+  }
 }
 
-function createFloorMesh(
-  width: number,
-  height: number,
-  color: number = FLOOR_PARAMS.color,
-  opacity: number = FLOOR_PARAMS.opacity,
-  roughness: number = FLOOR_PARAMS.roughness,
-  metallic: number = FLOOR_PARAMS.metallic
-): THREE.Mesh {
-  const material = new THREE.MeshStandardMaterial({ color, roughness, metallic: metallic, side: THREE.DoubleSide, transparent: opacity < 1, opacity })
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material)
-  mesh.rotation.x = -Math.PI / 2
-  mesh.position.y = 0
-  return mesh
+function unhoverWallObject(wallObject: WallObject) {
+  const mesh = wallObject.getMesh()
+  if (mesh.material instanceof THREE.MeshStandardMaterial) {
+    mesh.material.emissive.set(0x000000)
+    mesh.material.emissiveIntensity = 1.0
+  }
 }
 
-function createResizeMarker(
-  color: number = MARKER_PARAMS.color,
-  size: number = MARKER_PARAMS.size
-): THREE.Mesh {
-  const markerGeometry = new THREE.BoxGeometry(size, size, size)
-  const markerMaterial = new THREE.MeshBasicMaterial({ color })
-  return new THREE.Mesh(markerGeometry, markerMaterial)
+function selectWallObject(obj: WallObject) {
+  if (!selectedWallObjects.includes(obj)) {
+    highlightWallObject(obj)
+    selectedWallObjects.push(obj)
+  }
+}
+
+function deselectWallObject(obj: WallObject) {
+  const idx = selectedWallObjects.indexOf(obj)
+  if (idx !== -1) {
+    unhighlightWallObject(obj)
+    selectedWallObjects.splice(idx, 1)
+  }
+}
+
+function clearAllSelections() {
+  // Снять выделение со всех
+  selectedWallObjects.forEach(obj => unhighlightWallObject(obj))
+  selectedWallObjects = []
+}
+
+function highlightWallObject(wallObject: WallObject) {
+  const mesh = wallObject.getMesh()
+  if (mesh.material instanceof THREE.MeshStandardMaterial) {
+    // Сохраняем исходный цвет только если он ещё не сохранён
+    if (mesh.userData.origColor === undefined) {
+      mesh.userData.origColor = mesh.material.color.getHex()
+    }
+    mesh.material.color.set(0xffff00)
+    mesh.material.emissive.set(0xffff00)
+    mesh.material.emissiveIntensity = 1.0
+  }
+}
+
+function unhighlightWallObject(wallObject: WallObject) {
+  const mesh = wallObject.getMesh()
+  if (mesh.material instanceof THREE.MeshStandardMaterial) {
+    // Возвращаем исходный цвет, если он был сохранён
+    if (mesh.userData.origColor !== undefined) {
+      mesh.material.color.set(mesh.userData.origColor)
+      delete mesh.userData.origColor
+    }
+    mesh.material.emissive.set(0x000000)
+    mesh.material.emissiveIntensity = 1.0
+  }
 }
 
 onMounted(() => {

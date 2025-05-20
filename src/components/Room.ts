@@ -5,6 +5,7 @@ import { WALL_PARAMS, FLOOR_PARAMS, MARKER_PARAMS } from '../params/config'
 
 export class Room {
   private group: THREE.Group
+  private objectsGroup: THREE.Group // Группа для всех пользовательских объектов
   private walls: THREE.Mesh[] = []
   private wallObjects: WallObject[] = []
   private resizeMarkers: THREE.Mesh[] = []
@@ -20,6 +21,8 @@ export class Room {
     this.height = height
     this.wallHeight = wallHeight
     this.group = new THREE.Group()
+    this.objectsGroup = new THREE.Group()
+    this.group.add(this.objectsGroup)
     this.createFloor()
     this.createWalls()
     this.createResizeMarkers()
@@ -30,7 +33,7 @@ export class Room {
     const floorMaterial = new THREE.MeshStandardMaterial({ 
       color: FLOOR_PARAMS.color,
       roughness: FLOOR_PARAMS.roughness,
-      metalness: FLOOR_PARAMS.metallic,
+      metalness: FLOOR_PARAMS.metalness,
       side: THREE.DoubleSide,
       transparent: FLOOR_PARAMS.opacity < 1,
       opacity: FLOOR_PARAMS.opacity
@@ -82,7 +85,7 @@ export class Room {
     const wallMaterial = new THREE.MeshStandardMaterial({
       color: WALL_PARAMS.color,
       roughness: WALL_PARAMS.roughness,
-      metalness: WALL_PARAMS.metallic,
+      metalness: WALL_PARAMS.metalness,
       transparent: WALL_PARAMS.opacity < 1,
       opacity: WALL_PARAMS.opacity
     })
@@ -179,7 +182,7 @@ export class Room {
   public addWallObject(type: WallObjectType, wall: THREE.Mesh, position: number = 0.5, height: number = 0.5): WallObject {
     const wallObject = new WallObject(type, wall, position, height)
     this.wallObjects.push(wallObject)
-    this.group.add(wallObject.getObject())
+    this.objectsGroup.add(wallObject.getObject())
     return wallObject
   }
   public getWallObjects(): WallObject[] {
@@ -188,7 +191,19 @@ export class Room {
   public removeWallObject(wallObject: WallObject) {
     const index = this.wallObjects.indexOf(wallObject)
     if (index !== -1) {
-      this.group.remove(wallObject.getObject())
+      this.objectsGroup.remove(wallObject.getObject())
+      // Освобождаем память для всех дочерних объектов группы
+      wallObject.getObject().traverse(obj => {
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
+          if (obj.geometry) obj.geometry.dispose()
+          const mat = obj.material
+          if (Array.isArray(mat)) {
+            mat.forEach(m => m && typeof m.dispose === 'function' && m.dispose())
+          } else if (mat && typeof mat.dispose === 'function') {
+            mat.dispose()
+          }
+        }
+      })
       this.wallObjects.splice(index, 1)
     }
   }
@@ -196,3 +211,4 @@ export class Room {
     return this.wallNormals
   }
 }
+ 

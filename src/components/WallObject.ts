@@ -4,6 +4,7 @@ import { SOCKET_PARAMS, DOOR_PARAMS } from '../params/config'
 export type WallObjectType = 'socket' | 'door'
 
 export class WallObject {
+  private group: THREE.Group
   private mesh: THREE.Mesh
   private type: WallObjectType
   private wall: THREE.Mesh
@@ -22,6 +23,8 @@ export class WallObject {
     this.isGhost = isGhost
     this.zOffset = zOffset
 
+    this.group = new THREE.Group()
+
     // Создание геометрии и материала по параметрам из config
     let geometry: THREE.BufferGeometry
     let material: THREE.Material
@@ -31,7 +34,7 @@ export class WallObject {
       material = new THREE.MeshStandardMaterial({ 
         color: SOCKET_PARAMS.color,
         roughness: SOCKET_PARAMS.roughness,
-        metalness: SOCKET_PARAMS.metallic,
+        metalness: SOCKET_PARAMS.metalness,
         transparent: isGhost || SOCKET_PARAMS.opacity < 1,
         opacity: isGhost ? SOCKET_PARAMS.ghostOpacity : SOCKET_PARAMS.opacity
       })
@@ -40,7 +43,7 @@ export class WallObject {
       material = new THREE.MeshStandardMaterial({ 
         color: DOOR_PARAMS.color,
         roughness: DOOR_PARAMS.roughness,
-        metalness: DOOR_PARAMS.metallic,
+        metalness: DOOR_PARAMS.metalness,
         transparent: isGhost || DOOR_PARAMS.opacity < 1,
         opacity: isGhost ? DOOR_PARAMS.ghostOpacity : DOOR_PARAMS.opacity
       })
@@ -56,6 +59,7 @@ export class WallObject {
       // Отключаем raycast для всех детей (контуров)
       this.mesh.traverse(child => { child.raycast = () => {}; })
     }
+    this.group.add(this.mesh)
   }
 
   private updatePosition() {
@@ -84,7 +88,15 @@ export class WallObject {
     this.mesh.quaternion.copy(this.wall.getWorldQuaternion(new THREE.Quaternion()))
   }
 
-  public getObject(): THREE.Mesh {
+  public getObject(): THREE.Group {
+    return this.group
+  }
+
+  public getId(): string {
+    return this.group.uuid
+  }
+
+  public getMesh(): THREE.Mesh {
     return this.mesh
   }
 
