@@ -52,6 +52,16 @@
             Добавить дверь
           </button>
         </div>
+        
+        <!-- Кнопка удаления, доступна только в режиме выделения и если есть выделенные объекты -->
+        <div v-if="isSelectMode" class="action-controls">
+          <button 
+            @click="deleteSelectedObjects()" 
+            :disabled="selectedObjectsCount === 0"
+            :class="{ 'disabled': selectedObjectsCount === 0, 'delete-button': true }">
+            Удалить
+          </button>
+        </div>
       </div>
       
       <!-- Кнопка Debug доступна всегда -->
@@ -63,7 +73,7 @@
     </div>
     
     <!-- Панель управления выделенными объектами -->
-    <div v-if="currentMode === 'object' && isSelectMode && selectionManager.selectedObjects.length > 0" class="selection-panel">
+    <div v-if="currentMode === 'object' && isSelectMode && selectedObjectsCount > 0" class="selection-panel">
       <div class="selection-info">
         <span class="selection-count">Выделено объектов: {{ selectedObjectsCount }}</span>
         <div class="selection-types">
@@ -71,9 +81,6 @@
           <span v-if="getSelectedTypeCount('door') > 0">Двери: {{ getSelectedTypeCount('door') }}</span>
         </div>
       </div>
-      <button @click="deleteSelectedObjects()" class="delete-button">
-        Удалить выделенные объекты
-      </button>
     </div>
   </div>
 </template>
@@ -594,6 +601,9 @@ const setSelectMode = (value: boolean) => {
 }
 
 const deleteSelectedObjects = () => {
+  // Проверяем, что есть выделенные объекты
+  if (selectedObjectsCount.value === 0) return;
+
   const selectedObjects = [...selectionManager.selectedObjects] // Создаем копию массива
   selectedObjects.forEach(obj => {
     const room = rooms.find(room => room.getWallObjects().includes(obj))
@@ -601,6 +611,7 @@ const deleteSelectedObjects = () => {
       room.removeWallObject(obj)
     }
   })
+  // Очищаем выделение и обновляем счетчик
   selectionManager.clear()
   updateSelectedObjectsCount()
 }
@@ -719,6 +730,20 @@ button.active {
   color: white;
 }
 
+button:disabled,
+button.disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+button:disabled:hover,
+button.disabled:hover {
+  background: #cccccc;
+  transform: none;
+}
+
 .wall-height-control {
   margin-bottom: 10px;
   display: flex;
@@ -761,26 +786,26 @@ input[type="range"] {
   gap: 10px;
 }
 
-.delete-button {
-  margin-top: 10px;
-  background: #ff4444;
-  color: white;
-  font-weight: bold;
-  padding: 10px 16px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-.delete-button:hover {
-  background: #ff2222;
-}
-
 .debug-control {
   margin-top: 10px;
   border-top: 1px solid #e0e0e0;
   padding-top: 10px;
+}
+
+.action-controls {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.delete-button {
+  background: #ff4444;
+  color: white;
+  font-weight: bold;
+}
+
+.delete-button:hover:not(.disabled) {
+  background: #ff2222;
 }
 </style> 
