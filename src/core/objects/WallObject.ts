@@ -1,13 +1,19 @@
 import * as THREE from 'three'
-import { SOCKET_PARAMS, DOOR_PARAMS } from '../params/config'
+import { SOCKET_PARAMS, DOOR_PARAMS } from '../../params/config'
+import { SceneObject } from './SceneObject'
+import type { SelectableObject } from './SelectableObject'
+import type { HasOutline } from './interfaces/HasOutline'
+import { Wall } from './Wall'
 
 export type WallObjectType = 'socket' | 'door'
 
-export class WallObject {
+export class WallObject extends SceneObject implements SelectableObject, HasOutline {
+  public isSelected = false
   private group: THREE.Group
   private mesh: THREE.Mesh
+  public outline: THREE.LineSegments
   private type: WallObjectType
-  private wall: THREE.Mesh
+  private wall: Wall
   private position: number // Позиция на стене (0-1)
   private height: number // Высота от пола
   private isDragging: boolean = false
@@ -15,15 +21,16 @@ export class WallObject {
   private isGhost: boolean
   private zOffset: number | undefined
 
-  constructor(type: WallObjectType, wall: THREE.Mesh, position: number = 0.5, height: number = 0.5, isGhost: boolean = false, zOffset?: number) {
+  constructor(type: WallObjectType, wall: Wall, position: number = 0.5, height: number = 0.5, isGhost: boolean = false, zOffset?: number) {
+    const group = new THREE.Group()
+    super(group)
+    this.group = group
     this.type = type
     this.wall = wall
     this.position = position
     this.height = height
     this.isGhost = isGhost
     this.zOffset = zOffset
-
-    this.group = new THREE.Group()
 
     // Создание геометрии и материала по параметрам из config
     let geometry: THREE.BufferGeometry
@@ -51,8 +58,8 @@ export class WallObject {
     this.mesh = new THREE.Mesh(geometry, material)
     // Контур для объекта
     const edges = new THREE.EdgesGeometry(geometry)
-    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x111111, linewidth: 2 }))
-    this.mesh.add(line)
+    this.outline = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x111111, linewidth: 2 }))
+    this.mesh.add(this.outline)
     this.updatePosition()
     if (isGhost) {
       this.mesh.raycast = () => {} // Ghost-объект не ловит raycast
@@ -63,10 +70,16 @@ export class WallObject {
   }
 
   private updatePosition() {
+    // Проверяем, что wall и wall.mesh существуют
+    if (!this.wall || !this.wall.mesh) {
+      console.error('Wall or wall.mesh is null or undefined in WallObject.updatePosition');
+      return;
+    }
+    
     // Получаем размеры стены
     const wallSize = new THREE.Vector3()
-    this.wall.geometry.computeBoundingBox()
-    this.wall.geometry.boundingBox?.getSize(wallSize)
+    this.wall.mesh.geometry.computeBoundingBox()
+    this.wall.mesh.geometry.boundingBox?.getSize(wallSize)
     // Позиция вдоль стены
     let x = (this.position - 0.5) * wallSize.x
     let y = 0
@@ -82,10 +95,10 @@ export class WallObject {
     }
     // Преобразуем локальные координаты в мировые
     const localPos = new THREE.Vector3(x, y, z)
-    this.wall.localToWorld(localPos)
+    this.wall.mesh.localToWorld(localPos)
     this.mesh.position.copy(localPos)
     // Поворот совпадает с поворотом стены
-    this.mesh.quaternion.copy(this.wall.getWorldQuaternion(new THREE.Quaternion()))
+    this.mesh.quaternion.copy(this.wall.mesh.getWorldQuaternion(new THREE.Quaternion()))
   }
 
   public getObject(): THREE.Group {
@@ -122,7 +135,7 @@ export class WallObject {
     return this.height
   }
 
-  public getWall(): THREE.Mesh {
+  public getWall(): Wall {
     return this.wall
   }
 
@@ -151,7 +164,7 @@ export class WallObject {
     worldDelta.y = 0
 
     // Определяем, на какой стене находится объект
-    const isVertical = Math.abs(this.wall.rotation.y) === Math.PI / 2
+    const isVertical = Math.abs(this.wall.mesh.rotation.y) === Math.PI / 2
 
     // Вычисляем новую позицию
     let newPosition = this.position
@@ -180,5 +193,37 @@ export class WallObject {
     } else {
       this.mesh.raycast = THREE.Mesh.prototype.raycast
     }
+  }
+
+  public select() {
+    if (this.mesh.material instanceof THREE.MeshStandardMaterial) {
+      if (this.mesh.userData.origColor === undefined) {
+        this.mesh.userData.origColor = this.mesh.material.color.getHex()
+      }
+      this.mesh.material.color.set(0xffff00)
+      this.mesh.material.emissive.set(0xffff00)
+      this.mesh.material.emissiveIntensity = 1.0
+    }
+    this.isSelected = true
+  }
+
+  public deselect() {
+    if (this.mesh.material instanceof THREE.MeshStandardMaterial) {
+      if (this.mesh.userData.origColor !== undefined) {
+        this.mesh.material.color.set(this.mesh.userData.origColor)
+        delete this.mesh.userData.origColor
+      }
+      this.mesh.material.emissive.set(0x000000)
+      this.mesh.material.emissiveIntensity = 1.0
+    }
+    this.isSelected = false
+  }
+
+  showOutline() {
+    this.outline.visible = true
+  }
+
+  hideOutline() {
+    this.outline.visible = false
   }
 } 
