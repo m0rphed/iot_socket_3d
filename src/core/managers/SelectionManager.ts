@@ -7,6 +7,7 @@ export class SelectionManager {
   selectedObjects: SelectableObject[] = []
   hoveredObject: SelectableObject | null = null
   private sceneManager: SceneManager | null = null
+  private onSelectionChangeCallback: (() => void) | null = null
 
   constructor(sceneManager?: SceneManager) {
     this.sceneManager = sceneManager || null
@@ -17,6 +18,14 @@ export class SelectionManager {
   }
   
   /**
+   * Устанавливает колбэк, который будет вызываться при изменении выделения
+   * @param callback Функция для вызова при изменении выделения
+   */
+  setOnSelectionChangeCallback(callback: () => void) {
+    this.onSelectionChangeCallback = callback
+  }
+
+  /**
    * Выделяет объект
    * @param obj Объект для выделения
    */
@@ -24,6 +33,9 @@ export class SelectionManager {
     if (!this.selectedObjects.includes(obj)) {
       obj.select()
       this.selectedObjects.push(obj)
+      if (this.onSelectionChangeCallback) {
+        this.onSelectionChangeCallback()
+      }
     }
   }
   
@@ -36,6 +48,9 @@ export class SelectionManager {
     if (idx !== -1) {
       obj.deselect()
       this.selectedObjects.splice(idx, 1)
+      if (this.onSelectionChangeCallback) {
+        this.onSelectionChangeCallback()
+      }
     }
   }
   
@@ -45,6 +60,9 @@ export class SelectionManager {
   clear() {
     this.selectedObjects.forEach(obj => obj.deselect())
     this.selectedObjects = []
+    if (this.onSelectionChangeCallback) {
+      this.onSelectionChangeCallback()
+    }
   }
   
   /**
