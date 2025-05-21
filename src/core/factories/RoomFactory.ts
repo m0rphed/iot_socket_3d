@@ -64,12 +64,8 @@ export class RoomFactory {
     const walls = this.createWalls(width, depth, wallHeight);
     walls.forEach(wall => group.add(wall.mesh));
     
-    // Создаем объект комнаты
-    const room = new Room(group, walls, floor);
-    
-    // Устанавливаем правильные размеры для комнаты
-    room.width = width;
-    room.height = depth;
+    // Создаем объект комнаты, передавая размеры явно
+    const room = new Room(group, walls, floor, width, depth, wallHeight);
     
     return room;
   }

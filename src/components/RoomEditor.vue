@@ -734,25 +734,48 @@ const handleRoomDrag = () => {
 
 // Обработчик изменения размера комнаты
 const handleRoomResize = () => {
-  const deltaX = mouse.x - dragStart.x
-  const deltaY = mouse.y - dragStart.y
+  if (!selectedRoom || !selectedMarker) return;
+  
+  const deltaX = mouse.x - dragStart.x;
+  const deltaY = mouse.y - dragStart.y;
 
-  // Преобразование движения мыши в изменение размера
-  const worldDelta = new THREE.Vector3(deltaX, 0, deltaY)
-  worldDelta.applyQuaternion(camera.quaternion)
-  worldDelta.y = 0
-
-  // Определяем, какой маркер выбран и как изменять размеры
-  const markerPosition = selectedMarker!.position
-  const newWidth = Math.max(2, initialSize.width + (markerPosition.x > 0 ? worldDelta.x : -worldDelta.x) * 2)
-  const newHeight = Math.max(2, initialSize.height + (markerPosition.z > 0 ? worldDelta.z : -worldDelta.z) * 2)
-
-  // Округление до ближайшей сетки
-  const gridSize = 0.5
-  const roundedWidth = Math.round(newWidth / gridSize) * gridSize
-  const roundedHeight = Math.round(newHeight / gridSize) * gridSize
-
-  selectedRoom!.setSize(roundedWidth, roundedHeight)
+  // Преобразование движения мыши в изменение размера в мировых координатах
+  const worldDelta = new THREE.Vector3(deltaX, 0, deltaY);
+  worldDelta.applyQuaternion(camera.quaternion);
+  worldDelta.y = 0; // Оставляем только изменения по горизонтали
+  
+  // Получаем информацию о том, какой угол был выбран
+  const corner = selectedMarker.userData.corner || { x: Math.sign(selectedMarker.position.x), z: Math.sign(selectedMarker.position.z) };
+  
+  // Логируем для отладки
+  console.log('Corner info:', corner, 'Delta:', worldDelta);
+  
+  // Вычисляем новые размеры в зависимости от выбранного угла
+  // Если тянем за правый край (corner.x > 0), увеличиваем ширину при движении вправо
+  // Если тянем за левый край (corner.x < 0), увеличиваем ширину при движении влево
+  // То же самое для верхнего/нижнего края по z
+  const xMultiplier = corner.x; // 1 для правой стороны, -1 для левой
+  const zMultiplier = corner.z; // 1 для верхней стороны, -1 для нижней
+  
+  // Проецируем мировое смещение на локальные оси комнаты
+  // Для упрощения считаем, что комната всегда выровнена по осям мира
+  const localDeltaX = worldDelta.x * xMultiplier; // Положительное значение означает увеличение размера
+  const localDeltaZ = worldDelta.z * zMultiplier; // Положительное значение означает увеличение размера
+  
+  // Вычисляем новые размеры
+  const newWidth = Math.max(1, initialSize.width + localDeltaX * 2); // Умножаем на 2, так как изменяем в одну сторону
+  const newHeight = Math.max(1, initialSize.height + localDeltaZ * 2);
+  
+  // Округляем до ближайшей сетки для лучшего выравнивания
+  const gridSize = 0.5;
+  const roundedWidth = Math.round(newWidth / gridSize) * gridSize;
+  const roundedHeight = Math.round(newHeight / gridSize) * gridSize;
+  
+  // Устанавливаем новые размеры комнаты
+  selectedRoom.setSize(roundedWidth, roundedHeight);
+  
+  // Обновляем драг-старт для более плавного изменения
+  // dragStart.set(mouse.x, mouse.y);
 }
 
 // Обработчик наведения в режиме объектов

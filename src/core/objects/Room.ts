@@ -12,14 +12,25 @@ export class Room extends SceneObject {
   floor: Floor
   wallObjects: WallObject[] = []
   resizeMarkers: THREE.Mesh[] = []
-  width: number = 4
-  height: number = 4
+  width: number
+  height: number
   wallHeight: number = 2.5
 
-  constructor(group: THREE.Group, walls: Wall[], floor: Floor) {
+  constructor(group: THREE.Group, walls: Wall[], floor: Floor, width?: number, height?: number, wallHeight?: number) {
     super(group)
     this.walls = walls
     this.floor = floor
+    
+    // Устанавливаем размеры комнаты
+    this.width = width || this.calculateWidthFromGeometry()
+    this.height = height || this.calculateHeightFromGeometry()
+    
+    // Опционально устанавливаем высоту стен
+    if (wallHeight !== undefined && wallHeight > 0) {
+      this.wallHeight = wallHeight
+    }
+    
+    // Создаем маркеры изменения размера
     this.createResizeMarkers()
   }
 
@@ -244,17 +255,32 @@ export class Room extends SceneObject {
     })
     this.resizeMarkers = []
     
-    // Новые маркеры по углам
+    // Вычисляем позиции маркеров на основе текущих размеров комнаты
+    // Полуширина и полувысота комнаты
+    const { width, height } = this.getSize()
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+    
+    // Новые маркеры по углам - размещаем их точно по углам комнаты
     const positions = [
-      { x: this.width / 2, z: this.height / 2 },
-      { x: -this.width / 2, z: this.height / 2 },
-      { x: this.width / 2, z: -this.height / 2 },
-      { x: -this.width / 2, z: -this.height / 2 }
+      { x: halfWidth, z: halfHeight },     // Правый верхний угол
+      { x: -halfWidth, z: halfHeight },    // Левый верхний угол
+      { x: halfWidth, z: -halfHeight },    // Правый нижний угол
+      { x: -halfWidth, z: -halfHeight }    // Левый нижний угол
     ]
     
+    // Логгирование для отладки
+    console.log(`Creating resize markers for room ${this.width}x${this.height}:`, positions);
+    
+    // Создаем маркеры и добавляем их в сцену
     positions.forEach(pos => {
       const marker = new THREE.Mesh(markerGeometry, markerMaterial)
+      // Устанавливаем маркер немного выше пола для лучшей видимости
       marker.position.set(pos.x, 0.1, pos.z)
+      marker.userData.corner = {
+        x: Math.sign(pos.x),  // 1 для правой стороны, -1 для левой
+        z: Math.sign(pos.z),  // 1 для верхней стороны, -1 для нижней
+      }
       this.resizeMarkers.push(marker)
       this.object3D.add(marker)
     })
@@ -398,11 +424,8 @@ export class Room extends SceneObject {
       floor.outline = floorOutline;
       group.add(floorMesh);
       
-      // Создаем комнату
-      const room = new Room(group, walls, floor);
-      room.width = data.width;
-      room.height = data.height;
-      room.wallHeight = data.wallHeight;
+      // Создаем комнату, передавая размеры явно
+      const room = new Room(group, walls, floor, data.width, data.height, data.wallHeight);
       
       // Добавляем комнату в сцену
       scene.add(group);
@@ -496,5 +519,111 @@ export class Room extends SceneObject {
     mesh.add(outline);
     
     return outline;
+  }
+
+  // Вспомогательный метод для вычисления ширины комнаты на основе геометрии пола
+  private calculateWidthFromGeometry(): number {
+    // Если есть пол, используем его геометрию
+    if (this.floor && this.floor.mesh && this.floor.mesh.geometry) {
+      const size = new THREE.Vector3();
+      this.floor.mesh.geometry.computeBoundingBox();
+      this.floor.mesh.geometry.boundingBox?.getSize(size);
+      return size.x;
+    }
+    
+    // Если нет пола, анализируем стены
+    if (this.walls && this.walls.length > 0) {
+      // Находим минимальные и максимальные X-координаты стен
+      let minX = Infinity;
+      let maxX = -Infinity;
+      
+      this.walls.forEach(wall => {
+        const rotY = Math.round(wall.mesh.rotation.y * 2 / Math.PI) * Math.PI / 2;
+        const isVertical = Math.abs(rotY) === Math.PI / 2;
+        
+        if (!isVertical) {
+          // Для горизонтальных стен (передняя/задняя) берем ширину стены
+          const size = new THREE.Vector3();
+          wall.mesh.geometry.computeBoundingBox();
+          wall.mesh.geometry.boundingBox?.getSize(size);
+          
+          // Ширина комнаты = ширина горизонтальной стены
+          return size.x;
+        } else {
+          // Для вертикальных стен (левая/правая) определяем X-координаты
+          const position = wall.mesh.position.x;
+          const thickness = wall.getThickness() / 2;
+          
+          // Определяем, левая или правая стена
+          if (rotY > 0) { // Правая стена
+            maxX = Math.max(maxX, position + thickness);
+          } else { // Левая стена
+            minX = Math.min(minX, position - thickness);
+          }
+        }
+      });
+      
+      // Если нашли ширину через стены
+      if (maxX > minX && maxX !== -Infinity && minX !== Infinity) {
+        return maxX - minX;
+      }
+    }
+    
+    // Если не удалось определить, возвращаем значение по умолчанию
+    console.warn('Could not determine room width, using default 4');
+    return 4;
+  }
+  
+  // Вспомогательный метод для вычисления высоты (глубины) комнаты на основе геометрии пола
+  private calculateHeightFromGeometry(): number {
+    // Если есть пол, используем его геометрию
+    if (this.floor && this.floor.mesh && this.floor.mesh.geometry) {
+      const size = new THREE.Vector3();
+      this.floor.mesh.geometry.computeBoundingBox();
+      this.floor.mesh.geometry.boundingBox?.getSize(size);
+      return size.z;
+    }
+    
+    // Если нет пола, анализируем стены
+    if (this.walls && this.walls.length > 0) {
+      // Находим минимальные и максимальные Z-координаты стен
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+      
+      this.walls.forEach(wall => {
+        const rotY = Math.round(wall.mesh.rotation.y * 2 / Math.PI) * Math.PI / 2;
+        const isVertical = Math.abs(rotY) === Math.PI / 2;
+        
+        if (isVertical) {
+          // Для вертикальных стен (левая/правая) берем ширину стены
+          const size = new THREE.Vector3();
+          wall.mesh.geometry.computeBoundingBox();
+          wall.mesh.geometry.boundingBox?.getSize(size);
+          
+          // Глубина комнаты = ширина вертикальной стены
+          return size.x;
+        } else {
+          // Для горизонтальных стен (передняя/задняя) определяем Z-координаты
+          const position = wall.mesh.position.z;
+          const thickness = wall.getThickness() / 2;
+          
+          // Определяем, передняя или задняя стена
+          if (Math.abs(rotY) < 0.01) { // Передняя стена
+            minZ = Math.min(minZ, position - thickness);
+          } else { // Задняя стена
+            maxZ = Math.max(maxZ, position + thickness);
+          }
+        }
+      });
+      
+      // Если нашли глубину через стены
+      if (maxZ > minZ && maxZ !== -Infinity && minZ !== Infinity) {
+        return maxZ - minZ;
+      }
+    }
+    
+    // Если не удалось определить, возвращаем значение по умолчанию
+    console.warn('Could not determine room height/depth, using default 4');
+    return 4;
   }
 } 
