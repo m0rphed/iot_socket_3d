@@ -103,6 +103,8 @@ export class SceneManager {
       // Добавляем на сцену, если сцена установлена
       if (this.scene && this.ghostWallObject) {
         this.scene.add(this.ghostWallObject.getObject())
+        // Устанавливаем сцену как родительский объект для правильного позиционирования
+        this.ghostWallObject.setParentObject(this.scene)
       }
       
       return this.ghostWallObject
@@ -140,32 +142,50 @@ export class SceneManager {
   placeGhostObject(): WallObject | null {
     if (!this.ghostWallObject || !this.ghostWall) {
       console.error('Ghost object or ghost wall is null in placeGhostObject');
-      return null
+      return null;
     }
     
     // Находим комнату, которой принадлежит стена
-    const rooms = this.objects.filter(obj => obj instanceof Room) as Room[]
-    const room = rooms.find(r => r.getWalls().includes(this.ghostWall!))
+    const rooms = this.objects.filter(obj => obj instanceof Room) as Room[];
+    const room = rooms.find(r => r.getWalls().includes(this.ghostWall!));
     
     if (!room) {
       console.error('Could not find room for the ghost wall');
-      return null
+      return null;
     }
     
-    const type = this.ghostWallObject.getType()
-    const position = this.ghostWallObject.getPosition()
+    const type = this.ghostWallObject.getType();
+    const position = this.ghostWallObject.getPosition();
     
     // Важно: сохраняем ссылку на стену перед удалением ghost-объекта
-    const wall = this.ghostWall
+    const wall = this.ghostWall;
     
-    // Удаляем ghost-объект
-    this.removeGhostObject()
+    let realObject: WallObject | null = null;
     
-    // Создаем реальный объект, используя сохраненную ссылку на стену
-    if (type === 'socket') {
-      return room.addSocket(wall, position)
-    } else {
-      return room.addDoor(wall, position)
+    try {
+      // Создаем реальный объект в зависимости от типа
+      if (type === 'socket') {
+        // почему this.ghostWallObject instanceof Socket? - потому что мы создаем ghost-объект типа Socket
+        if (this.ghostWallObject instanceof Socket) {
+          // Для розеток сохраняем значение глубины
+          const socketDepth = this.ghostWallObject.depth;
+          this.removeGhostObject(); // Удаляем ghost-объект после получения всех параметров
+          realObject = room.addSocket(wall, position, false, socketDepth);
+        } else {
+          this.removeGhostObject();
+          realObject = room.addSocket(wall, position);
+        }
+      } else {
+        this.removeGhostObject();
+        realObject = room.addDoor(wall, position);
+      }
+      
+      return realObject;
+    } catch (error) {
+      console.error('Error creating real object:', error);
+      // Если произошла ошибка, всё равно удаляем ghost-объект
+      this.removeGhostObject();
+      return null;
     }
   }
 

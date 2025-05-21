@@ -20,6 +20,7 @@ export class WallObject extends SceneObject implements SelectableObject, HasOutl
   private dragStart: THREE.Vector2 = new THREE.Vector2()
   private isGhost: boolean
   private zOffset: number | undefined
+  private parentObject: THREE.Object3D | null = null // Родительский объект (сцена или группа комнаты)
 
   constructor(type: WallObjectType, wall: Wall, position: number = 0.5, height: number = 0.5, isGhost: boolean = false, zOffset?: number) {
     // Проверяем входные данные
@@ -106,13 +107,24 @@ export class WallObject extends SceneObject implements SelectableObject, HasOutl
       y = (doorHeight / 2) - (wallSize.y / 2) // нижний край двери на полу
       z = 0 // дверь центрируется по толщине стены
     } else if (this.type === 'socket') {
-      y = 0.25 - (wallSize.y / 2) // розетка на высоте 0.25м
-      z = this.zOffset !== undefined ? this.zOffset : -0.06 // универсальное смещение
+      y = SOCKET_PARAMS.defaultAboveFloorPosition - (wallSize.y / 2) // розетка на высоте 0.25м
+      const socketDefaultOffset = SOCKET_PARAMS.depth / 2
+      z = this.zOffset !== undefined ? this.zOffset : - socketDefaultOffset
     }
-    // Преобразуем локальные координаты в мировые
-    const localPos = new THREE.Vector3(x, y, z)
-    this.wall.mesh.localToWorld(localPos)
-    this.mesh.position.copy(localPos)
+    
+    // Получаем мировые координаты позиции на стене
+    const worldPos = new THREE.Vector3(x, y, z)
+    this.wall.mesh.localToWorld(worldPos)
+
+    // Если есть родительский объект (не сцена, а комната) и это не ghost-объект,
+    // то преобразуем мировые координаты в локальные координаты родителя
+    if (this.parentObject && !this.isGhost) {
+      this.parentObject.worldToLocal(worldPos)
+    }
+    
+    // Устанавливаем позицию
+    this.mesh.position.copy(worldPos)
+    
     // Поворот совпадает с поворотом стены
     this.mesh.quaternion.copy(this.wall.mesh.getWorldQuaternion(new THREE.Quaternion()))
   }
@@ -153,6 +165,12 @@ export class WallObject extends SceneObject implements SelectableObject, HasOutl
 
   public getWall(): Wall {
     return this.wall
+  }
+
+  // Новый метод для установки родительского объекта
+  public setParentObject(parent: THREE.Object3D) {
+    this.parentObject = parent
+    this.updatePosition() // Обновляем позицию с учетом нового родителя
   }
 
   public startDrag(mouse: THREE.Vector2) {

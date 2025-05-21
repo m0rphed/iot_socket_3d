@@ -27,6 +27,7 @@ export const SOCKET_PARAMS = {
   metalness: 0.8,
   opacity: 1.0,
   ghostOpacity: 0.5,
+  defaultAboveFloorPosition: 0.25,
 }
 
 export const DOOR_PARAMS = {
