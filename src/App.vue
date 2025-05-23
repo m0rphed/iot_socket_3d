@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import RoomEditor from './components/RoomEditor.vue'
+import RoomEditor from './components/editor/RoomEditor.vue'
 </script>
 
 <template>
@@ -8,17 +8,33 @@ import RoomEditor from './components/RoomEditor.vue'
   </div>
 </template>
 
-<style scoped>
-* {
+<style>
+body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
+  font-family: 'Roboto', Arial, sans-serif;
+  background-color: #f5f5f5;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+html, body, #app {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .app {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
-  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .logo {
