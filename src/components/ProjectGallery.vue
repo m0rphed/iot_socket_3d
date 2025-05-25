@@ -235,55 +235,55 @@ onMounted(() => {
 
 <style scoped>
 .project-gallery {
+  padding: 24px;
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  background: #0f1419;
+  display: flex;
+  flex-direction: column;
 }
 
 .gallery-header {
-  text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .gallery-header h2 {
-  color: #2c3e50;
-  font-size: 2rem;
-  margin-bottom: 10px;
+  color: #f7fafc;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
   font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .gallery-header p {
-  color: #7f8c8d;
-  font-size: 1.1rem;
+  color: #a0aec0;
+  font-size: 0.875rem;
+  font-weight: 400;
 }
 
 .gallery-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  min-height: 400px;
 }
 
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 400px;
-  color: #7f8c8d;
+  gap: 16px;
+  color: #a0aec0;
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
+  border: 3px solid #2d3748;
+  border-top: 3px solid #3182ce;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 15px;
 }
 
 @keyframes spin {
@@ -292,43 +292,44 @@ onMounted(() => {
 }
 
 .slider-container {
+  width: 100%;
+  max-width: 800px;
   position: relative;
-  overflow: hidden;
-  border-radius: 8px;
 }
 
 .slider-wrapper {
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 .slider-track {
   display: flex;
-  transition: transform 0.5s ease-in-out;
+  transition: transform 0.5s ease;
 }
 
 .project-slide {
   min-width: 100%;
-  padding: 0 10px;
-  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .project-card {
-  background: white;
-  border-radius: 8px;
+  background: #1a202c;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .project-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: #3182ce;
 }
 
 .project-image {
   position: relative;
-  height: 250px;
+  height: 300px;
   overflow: hidden;
 }
 
@@ -362,53 +363,53 @@ onMounted(() => {
 }
 
 .load-project-btn {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .load-project-btn:hover {
-  background: #2980b9;
+  background: #2c5aa0;
+  transform: translateY(-2px);
 }
 
 .project-info {
-  padding: 20px;
+  padding: 24px;
 }
 
 .project-info h3 {
-  color: #2c3e50;
-  font-size: 1.3rem;
-  margin-bottom: 12px;
+  color: #f7fafc;
+  font-size: 1.25rem;
   font-weight: 600;
+  margin-bottom: 16px;
 }
 
 .project-stats {
   display: flex;
-  gap: 15px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  color: #7f8c8d;
-  font-size: 0.9rem;
+  gap: 6px;
+  color: #a0aec0;
+  font-size: 0.875rem;
 }
 
 .project-description {
-  color: #7f8c8d;
-  font-size: 0.95rem;
+  color: #a0aec0;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 
@@ -416,43 +417,44 @@ onMounted(() => {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
+  background: rgba(26, 32, 44, 0.9);
+  border: 1px solid #2d3748;
+  color: #f7fafc;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   z-index: 10;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .nav-arrow:hover:not(:disabled) {
-  background: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: #3182ce;
+  border-color: #3182ce;
+  transform: translateY(-50%) scale(1.1);
 }
 
 .nav-arrow:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
 .nav-arrow-left {
-  left: 15px;
+  left: -24px;
 }
 
 .nav-arrow-right {
-  right: 15px;
+  right: -24px;
 }
 
 .slider-indicators {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .indicator {
@@ -460,41 +462,37 @@ onMounted(() => {
   height: 12px;
   border-radius: 50%;
   border: none;
-  background: #bdc3c7;
+  background: #2d3748;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .indicator.active {
-  background: #3498db;
+  background: #3182ce;
+  transform: scale(1.2);
 }
 
 .indicator:hover {
-  background: #7f8c8d;
-}
-
-.indicator.active:hover {
-  background: #2980b9;
+  background: #4a5568;
 }
 
 .current-project-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #ecf0f1;
+  margin-top: 24px;
+  padding: 16px 0;
+  border-top: 1px solid #2d3748;
 }
 
 .project-counter {
-  color: #7f8c8d;
-  font-size: 0.9rem;
+  color: #a0aec0;
+  font-size: 0.875rem;
 }
 
 .project-title {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 1.1rem;
+  color: #f7fafc;
+  font-weight: 500;
 }
 
 .sr-only {
@@ -509,24 +507,9 @@ onMounted(() => {
   border: 0;
 }
 
-/* Адаптивность - 3 контрольные точки согласно требованиям */
-
-/* Контрольная точка 1200px - большие экраны */
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
   .project-gallery {
-    max-width: 900px;
-  }
-}
-
-/* Контрольная точка 800px - планшеты */
-@media (max-width: 800px) {
-  .project-gallery {
-    padding: 15px;
-    max-width: 100%;
-  }
-  
-  .gallery-header h2 {
-    font-size: 1.5rem;
+    padding: 16px;
   }
   
   .project-image {
@@ -534,11 +517,11 @@ onMounted(() => {
   }
   
   .project-info {
-    padding: 15px;
+    padding: 16px;
   }
   
   .project-stats {
-    gap: 10px;
+    gap: 12px;
   }
   
   .nav-arrow {
@@ -547,48 +530,11 @@ onMounted(() => {
   }
   
   .nav-arrow-left {
-    left: 10px;
+    left: -20px;
   }
   
   .nav-arrow-right {
-    right: 10px;
-  }
-}
-
-/* Контрольная точка 550px - мобильные устройства */
-@media (max-width: 550px) {
-  .project-gallery {
-    padding: 5px;
-    margin: 0;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .gallery-header h2 {
-    font-size: 1.2rem;
-  }
-  
-  .gallery-header p {
-    font-size: 0.9rem;
-    padding: 0 5px;
-  }
-  
-  .project-image {
-    height: 160px;
-  }
-  
-  .project-info {
-    padding: 10px;
-  }
-  
-  .project-info h3 {
-    font-size: 1rem;
-  }
-  
-  .project-stats {
-    flex-direction: column;
-    gap: 6px;
+    right: -20px;
   }
   
   .current-project-info {
@@ -596,36 +542,25 @@ onMounted(() => {
     gap: 8px;
     text-align: center;
   }
-  
+}
+
+@media (max-width: 480px) {
   .nav-arrow {
-    width: 30px;
-    height: 30px;
+    position: static;
+    transform: none;
+    margin: 0 8px;
   }
   
-  .nav-arrow-left {
-    left: 2px;
+  .slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   
-  .nav-arrow-right {
-    right: 2px;
-  }
-  
-  .load-project-btn {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-  }
-  
-  .project-slide {
-    padding: 0 5px;
-  }
-  
-  .slider-indicators {
-    margin-top: 15px;
-  }
-  
-  .indicator {
-    width: 10px;
-    height: 10px;
+  .nav-controls {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
   }
 }
 </style> 

@@ -352,97 +352,109 @@ const closeErrorModal = () => {
 
 <style scoped>
 .settings-form {
+  padding: 24px;
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  background: #0f1419;
+  overflow-y: auto;
 }
 
 .settings-header {
-  text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .settings-header h2 {
-  color: #2c3e50;
-  font-size: 2rem;
-  margin-bottom: 10px;
+  color: #f7fafc;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
   font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .settings-header p {
-  color: #7f8c8d;
-  font-size: 1.1rem;
+  color: #a0aec0;
+  font-size: 0.875rem;
+  font-weight: 400;
 }
 
 .settings-form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .form-section {
-  background: #f8f9fa;
-  padding: 20px;
+  background: #1a202c;
+  border: 1px solid #2d3748;
   border-radius: 8px;
-  border-left: 4px solid #3498db;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .form-section h3 {
-  color: #2c3e50;
-  font-size: 1.2rem;
-  margin-bottom: 15px;
+  color: #f7fafc;
+  font-size: 1.125rem;
   font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2d3748;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
-.form-group label {
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+label {
   display: block;
-  margin-bottom: 5px;
-  color: #2c3e50;
+  color: #e2e8f0;
+  font-size: 0.875rem;
   font-weight: 500;
-  font-size: 0.9rem;
+  margin-bottom: 6px;
 }
 
-.form-group label.required::after {
+.required::after {
   content: ' *';
-  color: #e74c3c;
+  color: #f56565;
 }
 
-.form-group input,
-.form-group select {
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
   width: 100%;
   padding: 10px 12px;
-  border: 2px solid #e0e0e0;
+  background: #2d3748;
+  border: 1px solid #4a5568;
   border-radius: 6px;
-  font-size: 0.9rem;
-  transition: border-color 0.3s ease;
-  box-sizing: border-box;
+  color: #f7fafc;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
 }
 
-.form-group input.error,
-.form-group select.error {
-  border-color: #e74c3c;
+input.error,
+select.error {
+  border-color: #f56565;
+  box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
 }
 
 .error-message {
+  color: #f56565;
+  font-size: 0.75rem;
+  margin-top: 4px;
   display: block;
-  color: #e74c3c;
-  font-size: 0.8rem;
-  margin-top: 5px;
 }
 
 .checkbox-group {
@@ -451,40 +463,36 @@ const closeErrorModal = () => {
 }
 
 .checkbox-label {
-  display: flex !important;
+  display: flex;
   align-items: center;
   cursor: pointer;
-  margin-bottom: 0 !important;
-  font-weight: normal !important;
+  margin-bottom: 0;
 }
 
 .checkbox-label input[type="checkbox"] {
-  opacity: 0;
-  position: absolute;
-  width: 0;
-  height: 0;
+  display: none;
 }
 
 .checkmark {
-  width: 20px;
-  height: 20px;
-  background: #fff;
-  border: 2px solid #e0e0e0;
+  width: 18px;
+  height: 18px;
+  background: #2d3748;
+  border: 1px solid #4a5568;
   border-radius: 4px;
   margin-right: 10px;
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .checkbox-label input[type="checkbox"]:checked + .checkmark {
-  background: #3498db;
-  border-color: #3498db;
+  background: #3182ce;
+  border-color: #3182ce;
 }
 
 .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
   content: '';
   position: absolute;
-  left: 6px;
+  left: 5px;
   top: 2px;
   width: 6px;
   height: 10px;
@@ -495,10 +503,11 @@ const closeErrorModal = () => {
 
 .form-actions {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #2d3748;
 }
 
 .btn-primary,
@@ -506,46 +515,50 @@ const closeErrorModal = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  border: none;
+  padding: 10px 20px;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  border: none;
 }
 
 .btn-primary {
-  background: #3498db;
+  background: #3182ce;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2980b9;
+  background: #2c5aa0;
+  transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
-  background: #bdc3c7;
+  background: #4a5568;
+  color: #a0aec0;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-secondary {
-  background: #95a5a6;
-  color: white;
+  background: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
 }
 
 .btn-secondary:hover {
-  background: #7f8c8d;
+  background: #4a5568;
+  border-color: #718096;
 }
 
-/* Модальные окна */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -553,91 +566,59 @@ const closeErrorModal = () => {
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
-  padding: 0;
+  background: #1a202c;
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  padding: 24px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  animation: modalAppear 0.3s ease-out;
-}
-
-@keyframes modalAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header {
   text-align: center;
-  padding: 25px 20px 15px;
+  margin-bottom: 16px;
 }
 
 .modal-header h3 {
-  margin: 10px 0 0 0;
-  color: #2c3e50;
-  font-size: 1.3rem;
+  color: #f7fafc;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 8px;
 }
 
 .success-icon {
-  color: #27ae60;
+  color: #68d391;
 }
 
 .error-icon {
-  color: #e74c3c;
+  color: #f56565;
 }
 
 .modal-body {
-  padding: 0 20px 20px;
   text-align: center;
-  color: #7f8c8d;
-  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
 .modal-body p {
-  margin: 8px 0;
+  color: #a0aec0;
+  font-size: 0.875rem;
+  margin-bottom: 8px;
 }
 
 .modal-actions {
-  padding: 15px 20px 25px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
 }
 
-.modal-actions .btn-primary,
-.modal-actions .btn-secondary {
-  padding: 10px 20px;
-  font-size: 0.9rem;
-}
-
-/* Адаптивность - 3 контрольные точки согласно требованиям */
-
-/* Контрольная точка 1200px - большие экраны */
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
   .settings-form {
-    max-width: 700px;
-  }
-}
-
-/* Контрольная точка 800px - планшеты */
-@media (max-width: 800px) {
-  .settings-form {
-    padding: 15px;
-    max-width: 100%;
-  }
-  
-  .settings-header h2 {
-    font-size: 1.5rem;
+    padding: 16px;
   }
   
   .form-section {
-    padding: 15px;
+    padding: 16px;
   }
   
   .form-actions {
@@ -646,72 +627,13 @@ const closeErrorModal = () => {
   
   .btn-primary,
   .btn-secondary {
-    justify-content: center;
-  }
-}
-
-/* Контрольная точка 550px - мобильные устройства */
-@media (max-width: 550px) {
-  .settings-form {
-    padding: 5px;
-    margin: 0;
     width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .settings-header h2 {
-    font-size: 1.2rem;
-  }
-  
-  .settings-header p {
-    font-size: 0.9rem;
-    padding: 0 5px;
-  }
-  
-  .form-section {
-    padding: 10px;
-    margin-bottom: 15px;
-  }
-  
-  .form-section h3 {
-    font-size: 1rem;
-  }
-  
-  .form-group {
-    margin-bottom: 12px;
-  }
-  
-  .form-group input,
-  .form-group select {
-    font-size: 16px; /* Предотвращает зум на iOS */
-    padding: 8px 10px;
+    justify-content: center;
   }
   
   .modal-content {
-    margin: 10px;
-    width: calc(100% - 20px);
-    max-width: none;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    padding: 10px 15px;
-    font-size: 0.85rem;
-  }
-  
-  .form-actions {
-    padding-top: 15px;
-    gap: 10px;
-  }
-  
-  .checkbox-label {
-    font-size: 0.9rem;
-  }
-  
-  .checkmark {
-    width: 18px;
-    height: 18px;
+    margin: 16px;
+    padding: 20px;
   }
 }
 </style> 

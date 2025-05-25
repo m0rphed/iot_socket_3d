@@ -5,12 +5,13 @@ import RoomEditor from './components/RoomEditor.vue'
 import IoTMonitoring from './components/IoTMonitoring.vue'
 import ProjectGallery from './components/ProjectGallery.vue'
 import SettingsForm from './components/SettingsForm.vue'
-import { Home, Monitor, Image, Settings } from 'lucide-vue-next'
+import { Home, Monitor, Image, Settings, Menu } from 'lucide-vue-next'
 
 const iotStore = useIoTStore()
 
 // Управление вкладками
 const activeTab = ref('editor')
+const sidebarOpen = ref(true)
 
 const tabs = [
   { id: 'editor', name: '3D Редактор', icon: Home },
@@ -24,64 +25,62 @@ const setActiveTab = (tabId: string) => {
   iotStore.setCurrentTab(tabId)
 }
 
+const toggleSidebar = () => {
+  sidebarOpen.value = !sidebarOpen.value
+}
+
 // Ссылка на компонент RoomEditor для загрузки проектов
 const roomEditorRef = ref<InstanceType<typeof RoomEditor> | null>(null)
 
 // Обработчик загрузки проекта из галереи
 const handleLoadProjectFromGallery = (projectData: any) => {
-  // Переключаемся на вкладку редактора
   setActiveTab('editor')
-  
-  // Загружаем проект в редактор
   if (roomEditorRef.value && roomEditorRef.value.loadProjectData) {
     roomEditorRef.value.loadProjectData(projectData)
-  } else {
-    console.warn('RoomEditor не готов для загрузки проекта')
   }
 }
 </script>
 
 <template>
-  <div id="app">
-    <header class="app-header">
-      <h1>🏠 3D Редактор IoT комнат</h1>
-      <p>Создавайте и редактируйте планировку комнат, размещайте IoT-устройства</p>
-    </header>
-
-    <!-- Навигация по вкладкам -->
-    <nav class="tab-navigation">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab.id"
-        @click="setActiveTab(tab.id)"
-        :class="['tab-button', { active: activeTab === tab.id }]"
-      >
-        <component :is="tab.icon" :size="20" />
-        <span>{{ tab.name }}</span>
-      </button>
-    </nav>
-
-    <main class="app-main">
-      <!-- Вкладка 3D Редактор -->
-      <div v-show="activeTab === 'editor'" class="tab-content">
-        <RoomEditor ref="roomEditorRef" />
+  <div class="app">
+    <!-- Боковое меню -->
+    <aside class="sidebar" :class="{ collapsed: !sidebarOpen }">
+      <div class="sidebar-header">
+        <button class="menu-toggle" @click="toggleSidebar">
+          <Menu :size="20" />
+        </button>
+        <span v-if="sidebarOpen" class="logo">🏠 IoT Dashboard</span>
       </div>
+      
+      <nav class="sidebar-nav">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.id"
+          @click="setActiveTab(tab.id)"
+          :class="['nav-item', { active: activeTab === tab.id }]"
+        >
+          <component :is="tab.icon" :size="20" />
+          <span v-if="sidebarOpen" class="nav-text">{{ tab.name }}</span>
+        </button>
+      </nav>
+    </aside>
 
-      <!-- Вкладка Мониторинг -->
-      <div v-show="activeTab === 'monitoring'" class="tab-content">
-        <IoTMonitoring />
-      </div>
+    <!-- Основной контент -->
+    <div class="main-layout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+      <!-- Хедер -->
+      <header class="header">
+        <h1>3D Редактор IoT комнат</h1>
+        <p>Создавайте и редактируйте планировку комнат, размещайте IoT-устройства</p>
+      </header>
 
-      <!-- Вкладка Галерея -->
-      <div v-show="activeTab === 'gallery'" class="tab-content">
-        <ProjectGallery @loadProject="handleLoadProjectFromGallery" />
-      </div>
-
-      <!-- Вкладка Настройки -->
-      <div v-show="activeTab === 'settings'" class="tab-content">
-        <SettingsForm />
-      </div>
-    </main>
+      <!-- Контент -->
+      <main class="content">
+        <RoomEditor v-show="activeTab === 'editor'" ref="roomEditorRef" />
+        <IoTMonitoring v-show="activeTab === 'monitoring'" />
+        <ProjectGallery v-show="activeTab === 'gallery'" @loadProject="handleLoadProjectFromGallery" />
+        <SettingsForm v-show="activeTab === 'settings'" />
+      </main>
+    </div>
   </div>
 </template>
 
@@ -92,225 +91,187 @@ const handleLoadProjectFromGallery = (projectData: any) => {
   box-sizing: border-box;
 }
 
-html, body {
-  overflow-x: hidden;
-  width: 100%;
-  max-width: 100vw;
-}
-
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: #0f1419;
+  color: #e2e8f0;
+  overflow: hidden;
 }
 
-#app {
-  min-height: 100vh;
+.app {
+  display: flex;
+  height: 100vh;
+  background: #0f1419;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #1a202c;
+  border-right: 1px solid #2d3748;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
+  transition: width 0.3s ease;
 }
 
-/* Header */
-.app-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 20px 40px;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 100%;
+.sidebar.collapsed {
+  width: 60px;
 }
 
-.app-header h1 {
-  color: #2c3e50;
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-  font-weight: 600;
-  word-wrap: break-word;
-}
-
-.app-header p {
-  color: #7f8c8d;
-  font-size: 1.1rem;
-  max-width: 600px;
-  margin: 0 auto;
-  word-wrap: break-word;
-}
-
-/* Tab Navigation */
-.tab-navigation {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  padding: 0 20px;
-  display: flex;
-  justify-content: center;
-  gap: 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.tab-button {
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid #2d3748;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 15px 25px;
+  gap: 12px;
+  min-height: 60px;
+}
+
+.menu-toggle {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-toggle:hover {
+  background: #2d3748;
+  color: #63b3ed;
+}
+
+.logo {
+  font-weight: 600;
+  color: #f7fafc;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px;
+}
+
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
   border: none;
   background: transparent;
-  color: #7f8c8d;
-  font-size: 1rem;
-  font-weight: 500;
+  color: #a0aec0;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-bottom: 3px solid transparent;
-  position: relative;
+  border-radius: 8px;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: #2d3748;
+  color: #f7fafc;
+}
+
+.nav-item.active {
+  background: #3182ce;
+  color: white;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px 8px;
+}
+
+.nav-text {
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
-.tab-button:hover {
-  color: #2c3e50;
-  background: rgba(52, 152, 219, 0.05);
-}
-
-.tab-button.active {
-  color: #2c3e50;
-  border-bottom-color: #3498db;
-  background: rgba(52, 152, 219, 0.1);
-}
-
-.tab-button span {
-  font-weight: 500;
-}
-
-/* Main content */
-.app-main {
+/* Main Layout */
+.main-layout {
   flex: 1;
-  padding: 20px;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  position: relative;
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
 }
 
-.tab-content {
-  width: 100%;
-  max-width: 1200px;
+.header {
+  background: #1a202c;
+  border-bottom: 1px solid #2d3748;
+  padding: 16px 24px;
+  min-height: 60px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
-  min-height: 600px;
-  overflow-x: hidden;
 }
 
-.tab-content[style*="display: none"] {
-  position: absolute;
-  top: 0;
-  left: 0;
-  visibility: hidden;
-  pointer-events: none;
+.header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f7fafc;
+  margin-bottom: 4px;
 }
 
-/* Responsive design - 3 контрольные точки согласно требованиям */
-
-/* Контрольная точка 1200px - большие экраны */
-@media (max-width: 1200px) {
-  .app-header h1 {
-    font-size: 2.2rem;
-  }
-  
-  .tab-content {
-    max-width: 1000px;
-  }
+.header p {
+  font-size: 0.875rem;
+  color: #a0aec0;
 }
 
-/* Контрольная точка 800px - планшеты */
-@media (max-width: 800px) {
-  .app-header {
-    padding: 15px 20px;
-  }
-  
-  .app-header h1 {
-    font-size: 1.8rem;
-  }
-  
-  .app-header p {
-    font-size: 1rem;
-  }
-  
-  .tab-navigation {
-    padding: 0 10px;
-    overflow-x: auto;
-    justify-content: flex-start;
-  }
-  
-  .tab-button {
-    padding: 12px 20px;
-    font-size: 0.9rem;
-    white-space: nowrap;
-    min-width: 120px;
-  }
-  
-  .app-main {
-    padding: 15px;
-  }
-  
-  .tab-content {
-    max-width: 100%;
-  }
+.content {
+  flex: 1;
+  background: #0f1419;
+  overflow: auto;
 }
 
-/* Контрольная точка 550px - мобильные устройства */
-@media (max-width: 550px) {
-  .app-header {
-    padding: 12px 10px;
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
   }
   
-  .app-header h1 {
-    font-size: 1.3rem;
-    margin-bottom: 8px;
-    line-height: 1.2;
+  .sidebar:not(.collapsed) {
+    transform: translateX(0);
   }
   
-  .app-header p {
-    font-size: 0.85rem;
-    padding: 0 5px;
+  .main-layout {
+    margin-left: 0;
   }
   
-  .tab-navigation {
-    padding: 0 5px;
-    justify-content: flex-start;
+  .header {
+    padding: 12px 16px;
   }
   
-  .tab-button {
-    padding: 12px 8px;
-    font-size: 0.75rem;
-    min-width: 60px;
-    flex-direction: column;
-    gap: 4px;
+  .header h1 {
+    font-size: 1.125rem;
   }
   
-  .tab-button span {
+  .header p {
     display: none;
   }
-  
-  .app-main {
-    padding: 10px 5px;
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
   }
   
-  .tab-content {
-    width: 100%;
-    max-width: 100%;
-    padding: 0;
+  .header {
+    padding: 8px 12px;
+  }
+  
+  .header h1 {
+    font-size: 1rem;
   }
 }
 </style>
