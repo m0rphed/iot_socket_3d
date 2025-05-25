@@ -92,6 +92,12 @@ const handleLoadProjectFromGallery = (projectData: any) => {
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -102,6 +108,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -111,6 +120,7 @@ body {
   padding: 20px 40px;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
+  width: 100%;
 }
 
 .app-header h1 {
@@ -118,6 +128,7 @@ body {
   font-size: 2.5rem;
   margin-bottom: 10px;
   font-weight: 600;
+  word-wrap: break-word;
 }
 
 .app-header p {
@@ -125,6 +136,7 @@ body {
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto;
+  word-wrap: break-word;
 }
 
 /* Tab Navigation */
@@ -139,6 +151,9 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-button {
@@ -155,6 +170,8 @@ body {
   transition: all 0.3s ease;
   border-bottom: 3px solid transparent;
   position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-button:hover {
@@ -180,6 +197,9 @@ body {
   justify-content: center;
   align-items: flex-start;
   position: relative;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .tab-content {
@@ -189,6 +209,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   min-height: 600px;
+  overflow-x: hidden;
 }
 
 .tab-content[style*="display: none"] {
@@ -199,14 +220,31 @@ body {
   pointer-events: none;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
+/* Responsive design - 3 контрольные точки согласно требованиям */
+
+/* Контрольная точка 1200px - большие экраны */
+@media (max-width: 1200px) {
+  .app-header h1 {
+    font-size: 2.2rem;
+  }
+  
+  .tab-content {
+    max-width: 1000px;
+  }
+}
+
+/* Контрольная точка 800px - планшеты */
+@media (max-width: 800px) {
   .app-header {
     padding: 15px 20px;
   }
   
   .app-header h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+  
+  .app-header p {
+    font-size: 1rem;
   }
   
   .tab-navigation {
@@ -219,28 +257,60 @@ body {
     padding: 12px 20px;
     font-size: 0.9rem;
     white-space: nowrap;
+    min-width: 120px;
   }
   
   .app-main {
     padding: 15px;
   }
+  
+  .tab-content {
+    max-width: 100%;
+  }
 }
 
-@media (max-width: 480px) {
+/* Контрольная точка 550px - мобильные устройства */
+@media (max-width: 550px) {
+  .app-header {
+    padding: 12px 10px;
+  }
+  
   .app-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    line-height: 1.2;
   }
   
   .app-header p {
-    font-size: 1rem;
+    font-size: 0.85rem;
+    padding: 0 5px;
+  }
+  
+  .tab-navigation {
+    padding: 0 5px;
+    justify-content: flex-start;
+  }
+  
+  .tab-button {
+    padding: 12px 8px;
+    font-size: 0.75rem;
+    min-width: 60px;
+    flex-direction: column;
+    gap: 4px;
   }
   
   .tab-button span {
     display: none;
   }
   
-  .tab-button {
-    padding: 12px 15px;
+  .app-main {
+    padding: 10px 5px;
+  }
+  
+  .tab-content {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
   }
 }
 </style>

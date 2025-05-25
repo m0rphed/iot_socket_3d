@@ -509,10 +509,20 @@ onMounted(() => {
   border: 0;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
+/* Адаптивность - 3 контрольные точки согласно требованиям */
+
+/* Контрольная точка 1200px - большие экраны */
+@media (max-width: 1200px) {
+  .project-gallery {
+    max-width: 900px;
+  }
+}
+
+/* Контрольная точка 800px - планшеты */
+@media (max-width: 800px) {
   .project-gallery {
     padding: 15px;
+    max-width: 100%;
   }
   
   .gallery-header h2 {
@@ -545,16 +555,77 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 480px) {
+/* Контрольная точка 550px - мобильные устройства */
+@media (max-width: 550px) {
+  .project-gallery {
+    padding: 5px;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .gallery-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .gallery-header p {
+    font-size: 0.9rem;
+    padding: 0 5px;
+  }
+  
+  .project-image {
+    height: 160px;
+  }
+  
+  .project-info {
+    padding: 10px;
+  }
+  
+  .project-info h3 {
+    font-size: 1rem;
+  }
+  
   .project-stats {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   
   .current-project-info {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     text-align: center;
+  }
+  
+  .nav-arrow {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .nav-arrow-left {
+    left: 2px;
+  }
+  
+  .nav-arrow-right {
+    right: 2px;
+  }
+  
+  .load-project-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .project-slide {
+    padding: 0 5px;
+  }
+  
+  .slider-indicators {
+    margin-top: 15px;
+  }
+  
+  .indicator {
+    width: 10px;
+    height: 10px;
   }
 }
 </style> 

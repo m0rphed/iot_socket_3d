@@ -616,10 +616,20 @@ const closeErrorModal = () => {
   font-size: 0.9rem;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
+/* Адаптивность - 3 контрольные точки согласно требованиям */
+
+/* Контрольная точка 1200px - большие экраны */
+@media (max-width: 1200px) {
+  .settings-form {
+    max-width: 700px;
+  }
+}
+
+/* Контрольная точка 800px - планшеты */
+@media (max-width: 800px) {
   .settings-form {
     padding: 15px;
+    max-width: 100%;
   }
   
   .settings-header h2 {
@@ -640,15 +650,68 @@ const closeErrorModal = () => {
   }
 }
 
-@media (max-width: 480px) {
-  .modal-content {
-    margin: 20px;
-    width: calc(100% - 40px);
+/* Контрольная точка 550px - мобильные устройства */
+@media (max-width: 550px) {
+  .settings-form {
+    padding: 5px;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .settings-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .settings-header p {
+    font-size: 0.9rem;
+    padding: 0 5px;
+  }
+  
+  .form-section {
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .form-section h3 {
+    font-size: 1rem;
+  }
+  
+  .form-group {
+    margin-bottom: 12px;
   }
   
   .form-group input,
   .form-group select {
     font-size: 16px; /* Предотвращает зум на iOS */
+    padding: 8px 10px;
+  }
+  
+  .modal-content {
+    margin: 10px;
+    width: calc(100% - 20px);
+    max-width: none;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 15px;
+    font-size: 0.85rem;
+  }
+  
+  .form-actions {
+    padding-top: 15px;
+    gap: 10px;
+  }
+  
+  .checkbox-label {
+    font-size: 0.9rem;
+  }
+  
+  .checkmark {
+    width: 18px;
+    height: 18px;
   }
 }
 </style> 

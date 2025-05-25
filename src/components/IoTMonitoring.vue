@@ -218,7 +218,21 @@ const getDeviceTypeLabel = (deviceType: string): string => {
   color: #e67e22;
 }
 
-@media (max-width: 768px) {
+/* Адаптивность - 3 контрольные точки согласно требованиям */
+
+/* Контрольная точка 1200px - большие экраны */
+@media (max-width: 1200px) {
+  .iot-monitoring {
+    max-width: 1000px;
+  }
+  
+  .stats-summary {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+/* Контрольная точка 800px - планшеты */
+@media (max-width: 800px) {
   .iot-monitoring {
     padding: 15px;
   }
@@ -228,7 +242,16 @@ const getDeviceTypeLabel = (deviceType: string): string => {
   }
   
   .stats-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .stat-card {
+    padding: 15px;
+  }
+  
+  .stat-value {
+    font-size: 2rem;
   }
   
   .devices-table {
@@ -237,7 +260,72 @@ const getDeviceTypeLabel = (deviceType: string): string => {
   
   .devices-table th,
   .devices-table td {
-    padding: 8px 10px;
+    padding: 10px 12px;
+  }
+}
+
+/* Контрольная точка 550px - мобильные устройства */
+@media (max-width: 550px) {
+  .iot-monitoring {
+    padding: 5px;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .monitoring-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .monitoring-header p {
+    font-size: 0.9rem;
+    padding: 0 5px;
+  }
+  
+  .stats-summary {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .stat-card {
+    padding: 10px;
+  }
+  
+  .stat-value {
+    font-size: 1.6rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+  
+  .devices-table-container {
+    padding: 10px;
+    overflow-x: auto;
+  }
+  
+  .devices-table {
+    font-size: 0.75rem;
+    min-width: 300px;
+  }
+  
+  .devices-table th,
+  .devices-table td {
+    padding: 6px 8px;
+  }
+  
+  .devices-table th {
+    font-size: 0.7rem;
+  }
+  
+  .status-indicator {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+  }
+  
+  .no-devices {
+    padding: 20px 10px;
   }
 }
 </style> 

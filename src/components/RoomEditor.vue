@@ -2194,23 +2194,168 @@ defineExpose({
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Адаптивность */
-@media (max-width: 600px) {
+/* Адаптивность - 3 контрольные точки согласно требованиям */
+
+/* Контрольная точка 1200px - большие экраны */
+@media (max-width: 1200px) {
   .room-editor-window {
-    width: 100vw !important;
-    height: 100vh !important;
-    border-radius: 0;
-    resize: none;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+}
+
+/* Контрольная точка 800px - планшеты */
+@media (max-width: 800px) {
+  .room-editor-window {
+    width: 95vw !important;
+    height: 80vh !important;
+    max-width: 95vw;
+    max-height: 80vh;
   }
   
   .editor-controls-compact {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    padding: 6px 10px;
   }
   
   .mode-controls-compact {
     flex-direction: column;
     align-items: stretch;
+    padding: 6px 10px;
+  }
+  
+  .selection-panel-compact {
+    min-width: 200px;
+    max-width: 250px;
+    font-size: 0.8rem;
+  }
+  
+  .iot-dashboard-compact {
+    width: 250px;
+    max-height: 350px;
+  }
+}
+
+/* Контрольная точка 550px - мобильные устройства */
+@media (max-width: 550px) {
+  .room-editor-window {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0;
+    resize: none;
+    max-width: 100vw;
+    max-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+  }
+  
+  .window-header {
+    padding: 8px 12px;
+  }
+  
+  .window-title h3 {
+    font-size: 0.9rem;
+  }
+  
+  .room-editor {
+    padding: 5px;
+  }
+  
+  .editor-controls-compact {
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px 8px;
+  }
+  
+  .main-modes {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .mode-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    flex: 1;
+  }
+  
+  .control-buttons-compact {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .control-buttons-compact button {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    flex: 1;
+  }
+  
+  .mode-controls-compact {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 5px 8px;
+  }
+  
+  .wall-height-control-compact {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .wall-height-control-compact input[type="range"] {
+    width: 120px;
+  }
+  
+  .selection-panel-compact {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    left: 5px;
+    min-width: auto;
+    max-width: none;
+    font-size: 0.75rem;
+  }
+  
+  .iot-dashboard-compact {
+    position: fixed;
+    top: 60px;
+    right: 5px;
+    left: 5px;
+    width: auto;
+    max-height: 60vh;
+  }
+  
+  .save-menu-compact,
+  .load-menu-compact {
+    width: calc(100vw - 20px);
+    max-width: 280px;
+  }
+  
+  .property-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  
+  .property-row label {
+    flex: none;
+    font-size: 0.75rem;
+  }
+  
+  .device-item-compact {
+    padding: 6px;
+    font-size: 0.75rem;
+  }
+  
+  .dashboard-summary-compact {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .summary-item-compact {
+    flex-direction: row;
+    justify-content: space-between;
   }
 }
 
