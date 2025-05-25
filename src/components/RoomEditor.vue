@@ -311,6 +311,10 @@ import { Door } from '../core/objects/Door'
 import { DebugHelper } from '../core/utils/DebugHelper'
 import { RoomFactory } from '../core/factories/RoomFactory'
 import { RoomPreview } from '../core/preview/RoomPreview'
+import { useIoTStore, type IoTDevice } from '../stores/iot'
+
+// Инициализируем Pinia store
+const iotStore = useIoTStore()
 
 const container = ref<HTMLElement | null>(null)
 const currentMode = ref<'room' | 'object'>('room')
@@ -882,6 +886,9 @@ const deleteSelectedObjects = () => {
   // Очищаем выделение и обновляем счетчик
   selectionManager.clear()
   updateSelectedObjectsCount()
+  
+  // Обновляем интерфейсы после удаления объектов
+  forceUpdateAllInterfaces()
 }
 
 const getSelectedTypeCount = (type: WallObjectType) => {
@@ -913,6 +920,8 @@ const handleObjectModeClick = (event: MouseEvent) => {
       );
       
       sceneManager.placeGhostObject();
+      // Обновляем интерфейсы после размещения объекта
+      forceUpdateAllInterfaces();
       return;
     } catch (error) {
       console.error('Error placing ghost object:', error);
@@ -963,8 +972,12 @@ const handleObjectModeClick = (event: MouseEvent) => {
             // Расчёт zOffset для розетки
             const socketDepth = SOCKET_PARAMS.depth;
             room.addSocket(wallObj, position, false, socketDepth);
+            // Обновляем интерфейсы после добавления розетки
+            forceUpdateAllInterfaces();
           } else if (selectedObjectType.value === 'door') {
             room.addDoor(wallObj, position);
+            // Обновляем интерфейсы после добавления двери
+            forceUpdateAllInterfaces();
           }
         }
       }
@@ -1440,6 +1453,18 @@ onUnmounted(() => {
   if (roomPreview) roomPreview.remove();
 })
 
+// Функция для преобразования Socket в IoTDevice для Pinia store
+const convertSocketsToIoTDevices = (): IoTDevice[] => {
+  return getAllSockets().map(socket => ({
+    id: socket.getId(),
+    name: socket.getName(),
+    type: 'socket',
+    isOn: socket.getIsOn(),
+    powerConsumption: socket.getPowerConsumption(),
+    deviceType: socket.getDeviceType()
+  }))
+}
+
 // Новая функция для принудительного обновления всех интерфейсов
 const forceUpdateAllInterfaces = () => {
   console.log('🔄 Принудительное обновление всех интерфейсов...')
@@ -1450,6 +1475,10 @@ const forceUpdateAllInterfaces = () => {
     
     // Принудительно обновляем счетчики выделенных объектов
     updateSelectedObjectsCount()
+    
+    // Обновляем Pinia store с текущими устройствами
+    const devices = convertSocketsToIoTDevices()
+    iotStore.updateDevices(devices)
     
     // Принудительно обновляем Vue реактивность для дашборда
     // Это заставит пересчитать все геттеры статистики
@@ -1466,6 +1495,7 @@ const forceUpdateAllInterfaces = () => {
       const totalPower = getTotalPowerConsumption()
       
       console.log(`📊 Статистика: ${totalSockets} розеток, ${activeSockets} активных, ${totalPower}Вт потребление`)
+      console.log(`📡 Pinia store обновлен: ${devices.length} устройств`)
     })
   } catch (error) {
     console.error('❌ Ошибка при обновлении интерфейсов:', error)

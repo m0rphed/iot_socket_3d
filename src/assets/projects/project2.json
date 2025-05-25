@@ -1,0 +1,279 @@
+{
+  "name": "Мой проект",
+  "date": 1748179833041,
+  "rooms": [
+    {
+      "width": 6,
+      "height": 6.5,
+      "wallHeight": "3.5",
+      "position": {
+        "x": -4,
+        "y": 0,
+        "z": -4.25
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": -3.25
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 6,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 3,
+            "y": 1.75,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 6.5,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": 3.25
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 6,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -3,
+            "y": 1.75,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 6.5,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "door",
+          "position": 0.6,
+          "wallIndex": 0
+        },
+        {
+          "type": "socket",
+          "position": 0.7,
+          "wallIndex": 3,
+          "name": "Розетка Climat",
+          "deviceType": "climate",
+          "isOn": true,
+          "powerConsumption": 0
+        },
+        {
+          "type": "door",
+          "position": 0.6,
+          "wallIndex": 1
+        }
+      ]
+    },
+    {
+      "width": 3,
+      "height": 5,
+      "wallHeight": "3.5",
+      "position": {
+        "x": 0.5,
+        "y": 0,
+        "z": -4.5
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": -2.5
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 3,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 1.5,
+            "y": 1.75,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 5,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": 2.5
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 3,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -1.5,
+            "y": 1.75,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 5,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "socket",
+          "position": 0.2,
+          "wallIndex": 1,
+          "name": "Розетка 585",
+          "deviceType": "power",
+          "isOn": false,
+          "powerConsumption": 0
+        },
+        {
+          "type": "socket",
+          "position": 0.6,
+          "wallIndex": 1,
+          "name": "Розетка Svet1",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 12
+        },
+        {
+          "type": "socket",
+          "position": 0.8,
+          "wallIndex": 1,
+          "name": "Розетка кондиционер_1",
+          "deviceType": "power",
+          "isOn": true,
+          "powerConsumption": 15
+        }
+      ]
+    },
+    {
+      "width": 3,
+      "height": 1.5,
+      "wallHeight": "3.5",
+      "position": {
+        "x": 0.5,
+        "y": 0,
+        "z": 1.25
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": -0.75
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 3,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 1.5,
+            "y": 1.75,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 1.5,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.75,
+            "z": 0.75
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 3,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -1.5,
+            "y": 1.75,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 1.5,
+          "height": 3.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "door",
+          "position": 0.2,
+          "wallIndex": 0
+        }
+      ]
+    }
+  ]
+}
