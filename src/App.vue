@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { useIoTStore } from './stores/iot'
 import RoomEditor from './components/RoomEditor.vue'
 import IoTMonitoring from './components/IoTMonitoring.vue'
+import ProjectGallery from './components/ProjectGallery.vue'
+import SettingsForm from './components/SettingsForm.vue'
 import { Home, Monitor, Image, Settings } from 'lucide-vue-next'
 
 const iotStore = useIoTStore()
@@ -20,6 +22,22 @@ const tabs = [
 const setActiveTab = (tabId: string) => {
   activeTab.value = tabId
   iotStore.setCurrentTab(tabId)
+}
+
+// Ссылка на компонент RoomEditor для загрузки проектов
+const roomEditorRef = ref<InstanceType<typeof RoomEditor> | null>(null)
+
+// Обработчик загрузки проекта из галереи
+const handleLoadProjectFromGallery = (projectData: any) => {
+  // Переключаемся на вкладку редактора
+  setActiveTab('editor')
+  
+  // Загружаем проект в редактор
+  if (roomEditorRef.value && roomEditorRef.value.loadProjectData) {
+    roomEditorRef.value.loadProjectData(projectData)
+  } else {
+    console.warn('RoomEditor не готов для загрузки проекта')
+  }
 }
 </script>
 
@@ -46,7 +64,7 @@ const setActiveTab = (tabId: string) => {
     <main class="app-main">
       <!-- Вкладка 3D Редактор -->
       <div v-show="activeTab === 'editor'" class="tab-content">
-        <RoomEditor />
+        <RoomEditor ref="roomEditorRef" />
       </div>
 
       <!-- Вкладка Мониторинг -->
@@ -56,20 +74,12 @@ const setActiveTab = (tabId: string) => {
 
       <!-- Вкладка Галерея -->
       <div v-show="activeTab === 'gallery'" class="tab-content">
-        <div class="gallery-placeholder">
-          <Image :size="64" class="placeholder-icon" />
-          <h2>Галерея проектов</h2>
-          <p>Здесь будет слайдер с проектами</p>
-        </div>
+        <ProjectGallery @loadProject="handleLoadProjectFromGallery" />
       </div>
 
       <!-- Вкладка Настройки -->
       <div v-show="activeTab === 'settings'" class="tab-content">
-        <div class="settings-placeholder">
-          <Settings :size="64" class="placeholder-icon" />
-          <h2>Настройки системы</h2>
-          <p>Здесь будет форма с валидацией</p>
-        </div>
+        <SettingsForm />
       </div>
     </main>
   </div>
@@ -169,6 +179,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  position: relative;
 }
 
 .tab-content {
@@ -178,7 +189,6 @@ body {
   justify-content: center;
   align-items: flex-start;
   min-height: 600px;
-  position: relative;
 }
 
 .tab-content[style*="display: none"] {
@@ -187,44 +197,6 @@ body {
   left: 0;
   visibility: hidden;
   pointer-events: none;
-}
-
-/* Placeholder styles */
-.gallery-placeholder,
-.settings-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 60px 40px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  width: 100%;
-  max-width: 500px;
-}
-
-.placeholder-icon {
-  margin-bottom: 20px;
-  opacity: 0.5;
-  color: #7f8c8d;
-}
-
-.gallery-placeholder h2,
-.settings-placeholder h2 {
-  color: #2c3e50;
-  font-size: 1.8rem;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.gallery-placeholder p,
-.settings-placeholder p {
-  color: #7f8c8d;
-  font-size: 1.1rem;
 }
 
 /* Responsive design */
@@ -251,11 +223,6 @@ body {
   
   .app-main {
     padding: 15px;
-  }
-  
-  .gallery-placeholder,
-  .settings-placeholder {
-    padding: 40px 20px;
   }
 }
 

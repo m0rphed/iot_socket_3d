@@ -295,7 +295,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, defineExpose } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Room as RoomClass } from '../core/objects/Room'
@@ -1501,6 +1501,37 @@ const forceUpdateAllInterfaces = () => {
     console.error('❌ Ошибка при обновлении интерфейсов:', error)
   }
 }
+
+// Функция для загрузки данных проекта (для использования из галереи)
+const loadProjectData = (projectData: any) => {
+  try {
+    // Очищаем сцену
+    clearScene()
+    
+    // Загружаем комнаты из данных проекта
+    if (projectData.rooms && Array.isArray(projectData.rooms)) {
+      projectData.rooms.forEach((roomData: any) => {
+        const room = RoomClass.fromJSON(scene, roomData)
+        if (room) {
+          rooms.push(room)
+          sceneManager.add(room)
+        }
+      })
+    }
+    
+    // Принудительно обновляем все интерфейсы после загрузки
+    forceUpdateAllInterfaces()
+    
+    console.log('✅ Проект из галереи успешно загружен')
+  } catch (error) {
+    console.error('❌ Ошибка при загрузке проекта из галереи:', error)
+  }
+}
+
+// Экспортируем методы для использования в родительском компоненте
+defineExpose({
+  loadProjectData
+})
 </script>
 
 <style scoped>
