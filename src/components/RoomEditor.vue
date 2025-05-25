@@ -1,165 +1,177 @@
 <template>
-  <div class="room-editor">
-    <div ref="container" class="editor-container"></div>
-    <div class="editor-controls">
-      <!-- Основные режимы -->
-      <div class="main-modes">
-        <button @click="setMode('room')" :class="{ active: currentMode === 'room' }">
-          Режим комнат
+  <div class="room-editor-window" :class="{ fullscreen: isFullscreen, minimized: isMinimized }">
+    <!-- Заголовок окна -->
+    <div class="window-header">
+      <div class="window-title">
+        <h3>3D Редактор IoT комнат</h3>
+      </div>
+      <div class="window-controls">
+        <button class="minimize-btn" @click="isMinimized = !isMinimized" :title="isMinimized ? 'Развернуть' : 'Свернуть'">
+          {{ isMinimized ? '🔺' : '🔻' }}
         </button>
-        <button @click="setMode('object')" :class="{ active: currentMode === 'object' }">
-          Режим объектов
+        <button class="fullscreen-btn" @click="isFullscreen = !isFullscreen" :title="isFullscreen ? 'Оконный режим' : 'Полноэкранный режим'">
+          {{ isFullscreen ? '🗗' : '🗖' }}
         </button>
       </div>
-      
-      <!-- Настройки для режима комнат -->
-      <div v-if="currentMode === 'room'" class="mode-controls">
-        <div class="wall-height-control">
-          <label>Высота стен:</label>
-          <input 
-            type="range" 
-            v-model="wallHeight" 
-            min="2" 
-            max="4" 
-            step="0.1"
-            @input="updateWallHeight"
-          >
-          <span>{{ wallHeight }}м</span>
-        </div>
+    </div>
+
+    <!-- Основное содержимое окна -->
+    <div class="window-content" :class="{ minimized: isMinimized, fullscreen: isFullscreen }">
+      <div class="room-editor">
+        <div ref="container" class="editor-container"></div>
         
-        <!-- Если не в режиме создания, показываем кнопку начала создания -->
-        <button v-if="!isCreatingRoom" @click="startRoomCreation" class="action-button">
-          Начать создание комнаты
-        </button>
-        
-        <!-- Если в режиме создания, показываем инструкции и кнопку отмены -->
-        <div v-else class="creation-instructions">
-          <div class="creation-step">
-            <span v-if="!roomStartPoint">1. Выберите первую точку комнаты</span>
-            <span v-else>2. Выберите вторую точку комнаты</span>
+        <!-- Компактная панель управления -->
+        <div class="editor-controls-compact">
+          <!-- Основные режимы -->
+          <div class="main-modes">
+            <button @click="setMode('room')" :class="{ active: currentMode === 'room' }" class="mode-btn">
+              🏠 Комнаты
+            </button>
+            <button @click="setMode('object')" :class="{ active: currentMode === 'object' }" class="mode-btn">
+              🔌 Объекты
+            </button>
           </div>
-          <button @click="cancelRoomCreation" class="cancel-button">
-            Отменить создание
-          </button>
+          
+          <!-- Дополнительные кнопки -->
+          <div class="control-buttons-compact">
+            <button @click="debugMode = !debugMode" :class="{ active: debugMode }" :title="'Debug режим'">
+              🔧
+            </button>
+            <button @click="showIoTDashboard = !showIoTDashboard" :class="{ active: showIoTDashboard }" :title="'IoT панель'">
+              📱
+            </button>
+            <button @click="toggleSaveMenu()" :class="{ active: showSaveMenu }" :title="'Сохранить'">
+              💾
+            </button>
+            <button @click="toggleLoadMenu()" :class="{ active: showLoadMenu }" :title="'Загрузить'">
+              📂
+            </button>
+          </div>
         </div>
-      </div>
-      
-      <!-- Настройки для режима объектов -->
-      <div v-if="currentMode === 'object'" class="mode-controls">
-        <!-- Подрежимы для режима объектов -->
-        <div class="submodes">
-          <button @click="setSelectMode(false)" :class="{ active: !isSelectMode }">
-            Добавление объектов
+
+        <!-- Настройки для режима комнат (компактные) -->
+        <div v-if="currentMode === 'room' && !isMinimized" class="mode-controls-compact">
+          <div class="wall-height-control-compact">
+            <label>Высота:</label>
+            <input 
+              type="range" 
+              v-model="wallHeight" 
+              min="2" 
+              max="4" 
+              step="0.1"
+              @input="updateWallHeight"
+            >
+            <span>{{ wallHeight }}м</span>
+          </div>
+          
+          <!-- Если не в режиме создания, показываем кнопку начала создания -->
+          <button v-if="!isCreatingRoom" @click="startRoomCreation" class="action-button-compact">
+            ➕ Создать комнату
           </button>
-          <button @click="setSelectMode(true)" :class="{ active: isSelectMode }">
-            Выделение объектов
-          </button>
+          
+          <!-- Если в режиме создания, показываем инструкции и кнопку отмены -->
+          <div v-else class="creation-instructions-compact">
+            <span v-if="!roomStartPoint" class="creation-step">1. Выберите первую точку</span>
+            <span v-else class="creation-step">2. Выберите вторую точку</span>
+            <button @click="cancelRoomCreation" class="cancel-button-compact">❌</button>
+          </div>
         </div>
         
-        <!-- Типы объектов, доступно только если не в режиме выделения -->
-        <div v-if="!isSelectMode" class="object-controls">
-          <button @click="setObjectType('socket')" :class="{ active: selectedObjectType === 'socket' }">
-            Добавить розетку
-          </button>
-          <button @click="setObjectType('door')" :class="{ active: selectedObjectType === 'door' }">
-            Добавить дверь
-          </button>
-        </div>
-        
-        <!-- Кнопка удаления, доступна только в режиме выделения и если есть выделенные объекты -->
-        <div v-if="isSelectMode" class="action-controls">
-          <button 
-            @click="deleteSelectedObjects()" 
-            :disabled="selectedObjectsCount === 0"
-            :class="{ 'disabled': selectedObjectsCount === 0, 'delete-button': true }">
-            Удалить
-          </button>
-        </div>
-      </div>
-      
-      <!-- Кнопки Debug, IoT дашборд и новые кнопки сохранения/загрузки -->
-      <div class="control-buttons">
-        <button @click="debugMode = !debugMode" :class="{ active: debugMode }">
-          Debug
-        </button>
-        
-        <button @click="showIoTDashboard = !showIoTDashboard" :class="{ active: showIoTDashboard }">
-          Панель IoT
-        </button>
-        
-        <div class="save-load-buttons">
-          <button @click="toggleSaveMenu()" :class="{ active: showSaveMenu }">
-            Сохранить
-          </button>
-          <button @click="toggleLoadMenu()" :class="{ active: showLoadMenu }">
-            Загрузить
-          </button>
+        <!-- Настройки для режима объектов (компактные) -->
+        <div v-if="currentMode === 'object' && !isMinimized" class="mode-controls-compact">
+          <!-- Подрежимы для режима объектов -->
+          <div class="submodes-compact">
+            <button @click="setSelectMode(false)" :class="{ active: !isSelectMode }" class="submode-btn">
+              ➕ Добавить
+            </button>
+            <button @click="setSelectMode(true)" :class="{ active: isSelectMode }" class="submode-btn">
+              👆 Выбрать
+            </button>
+          </div>
+          
+          <!-- Типы объектов, доступно только если не в режиме выделения -->
+          <div v-if="!isSelectMode" class="object-controls-compact">
+            <button @click="setObjectType('socket')" :class="{ active: selectedObjectType === 'socket' }" class="object-btn">
+              🔌 Розетка
+            </button>
+            <button @click="setObjectType('door')" :class="{ active: selectedObjectType === 'door' }" class="object-btn">
+              🚪 Дверь
+            </button>
+          </div>
+          
+          <!-- Кнопка удаления, доступна только в режиме выделения и если есть выделенные объекты -->
+          <div v-if="isSelectMode" class="action-controls-compact">
+            <button 
+              @click="deleteSelectedObjects()" 
+              :disabled="selectedObjectsCount === 0"
+              :class="{ 'disabled': selectedObjectsCount === 0, 'delete-button-compact': true }">
+              🗑️ Удалить ({{ selectedObjectsCount }})
+            </button>
+          </div>
         </div>
       </div>
     </div>
-    
-    <!-- Меню сохранения -->
-    <div v-if="showSaveMenu" class="save-menu">
-      <div class="menu-header">
-        <h3>Сохранить проект</h3>
-        <button class="close-btn" @click="showSaveMenu = false">×</button>
+
+    <!-- Меню сохранения (позиционированное относительно окна) -->
+    <div v-if="showSaveMenu" class="save-menu-compact">
+      <div class="menu-header-compact">
+        <h4>Сохранить проект</h4>
+        <button class="close-btn-compact" @click="showSaveMenu = false">×</button>
       </div>
       
-      <div class="menu-content">
-        <div class="input-group">
-          <label for="projectName">Название проекта:</label>
+      <div class="menu-content-compact">
+        <div class="input-group-compact">
+          <label for="projectName">Название:</label>
           <input type="text" id="projectName" v-model="saveProjectName" placeholder="Мой проект">
         </div>
         
-        <div class="button-group">
-          <button @click="saveToLocalStorage()" class="primary-btn">
-            Сохранить в браузере
+        <div class="button-group-compact">
+          <button @click="saveToLocalStorage()" class="primary-btn-compact">
+            💾 В браузер
           </button>
-          <button @click="exportToFile()" class="secondary-btn">
-            Экспорт в файл
+          <button @click="exportToFile()" class="secondary-btn-compact">
+            📥 В файл
           </button>
         </div>
       </div>
     </div>
-    
-    <!-- Меню загрузки -->
-    <div v-if="showLoadMenu" class="load-menu">
-      <div class="menu-header">
-        <h3>Загрузить проект</h3>
-        <button class="close-btn" @click="showLoadMenu = false">×</button>
+
+    <!-- Меню загрузки (позиционированное относительно окна) -->
+    <div v-if="showLoadMenu" class="load-menu-compact">
+      <div class="menu-header-compact">
+        <h4>Загрузить проект</h4>
+        <button class="close-btn-compact" @click="showLoadMenu = false">×</button>
       </div>
       
-      <div class="menu-content">
+      <div class="menu-content-compact">
         <div v-if="savedProjects.length > 0">
-          <h4>Сохраненные проекты:</h4>
-          <div class="saved-projects-list">
+          <div class="saved-projects-list-compact">
             <div 
               v-for="project in savedProjects" 
               :key="project.name" 
-              class="saved-project"
+              class="saved-project-compact"
             >
-              <div class="project-info">
+              <div class="project-info-compact">
                 <span class="project-name">{{ project.name }}</span>
                 <span class="project-date">{{ formatDate(project.date) }}</span>
               </div>
-              <div class="project-actions">
-                <button @click="loadFromLocalStorage(project.name)" class="action-btn">
-                  Загрузить
+              <div class="project-actions-compact">
+                <button @click="loadFromLocalStorage(project.name)" class="action-btn-compact">
+                  📂
                 </button>
-                <button @click="deleteFromLocalStorage(project.name)" class="action-btn delete">
-                  Удалить
+                <button @click="deleteFromLocalStorage(project.name)" class="action-btn-compact delete">
+                  🗑️
                 </button>
               </div>
             </div>
           </div>
         </div>
         
-        <div v-else class="no-saved-projects">
+        <div v-else class="no-saved-projects-compact">
           <p>Нет сохраненных проектов</p>
         </div>
         
-        <div class="import-section">
-          <h4>Импорт из файла:</h4>
+        <div class="import-section-compact">
           <input 
             type="file" 
             id="importFile" 
@@ -168,42 +180,37 @@
             @change="handleFileImport"
             style="display:none"
           >
-          <button @click="triggerFileInput()" class="secondary-btn">
-            Выбрать файл для импорта
+          <button @click="triggerFileInput()" class="secondary-btn-compact">
+            📁 Импорт файла
           </button>
         </div>
       </div>
     </div>
-    
-    <!-- Панель управления выделенными объектами -->
-    <div v-if="currentMode === 'object' && isSelectMode && selectedObjectsCount > 0" class="selection-panel">
-      <div class="selection-info">
-        <span class="selection-count">Выделено объектов: {{ selectedObjectsCount }}</span>
-        <div class="selection-types">
-          <span v-if="getSelectedTypeCount('socket') > 0">Розетки: {{ getSelectedTypeCount('socket') }}</span>
-          <span v-if="getSelectedTypeCount('door') > 0">Двери: {{ getSelectedTypeCount('door') }}</span>
-        </div>
+
+    <!-- Панель управления выделенными объектами (встроенная) -->
+    <div v-if="currentMode === 'object' && isSelectMode && selectedObjectsCount > 0 && !isMinimized" class="selection-panel-compact">
+      <div class="selection-info-compact">
+        <span class="selection-count">Выделено: {{ selectedObjectsCount }}</span>
       </div>
       
       <!-- Панель свойств для розеток (показывается только если выделена одна розетка) -->
-      <div v-if="selectedObjectsCount === 1 && getSelectedTypeCount('socket') === 1" class="socket-properties">
-        <h3>Свойства розетки</h3>
-        <div class="property-group">
-          <label for="socketName">Название:</label>
+      <div v-if="selectedObjectsCount === 1 && getSelectedTypeCount('socket') === 1" class="socket-properties-compact">
+        <div class="property-row">
+          <label>Название:</label>
           <input 
             type="text" 
-            id="socketName" 
             v-model="selectedSocketProperties.name" 
             @change="updateSocketName"
+            class="property-input"
           />
         </div>
         
-        <div class="property-group">
-          <label for="socketType">Тип устройства:</label>
+        <div class="property-row">
+          <label>Тип:</label>
           <select 
-            id="socketType" 
             v-model="selectedSocketProperties.deviceType"
             @change="updateSocketType"
+            class="property-select"
           >
             <option v-for="type in socketDeviceTypes" :key="type.value" :value="type.value">
               {{ type.label }}
@@ -211,117 +218,75 @@
           </select>
         </div>
         
-        <div class="property-group">
+        <div class="property-row">
           <label>Состояние:</label>
-          <div class="toggle-switch">
+          <div class="toggle-switch-compact">
             <input 
               type="checkbox" 
-              id="socketPower" 
+              id="socketPowerCompact" 
               v-model="selectedSocketProperties.isOn"
               @change="toggleSocketPower"
             />
-            <label for="socketPower">{{ selectedSocketProperties.isOn ? 'Включено' : 'Выключено' }}</label>
+            <label for="socketPowerCompact">{{ selectedSocketProperties.isOn ? 'Вкл' : 'Выкл' }}</label>
           </div>
         </div>
         
-        <div class="property-group">
-          <label for="socketPowerConsumption">Потребление (Вт):</label>
+        <div class="property-row">
+          <label>Потребление:</label>
           <input 
             type="number" 
-            id="socketPowerConsumption" 
             v-model="selectedSocketProperties.powerConsumption" 
             @change="updateSocketPowerConsumption"
             min="0" 
             max="5000"
+            class="property-input"
           />
+          <span class="unit">Вт</span>
         </div>
       </div>
     </div>
-    
-    <!-- IoT Дашборд -->
-    <div v-if="showIoTDashboard" class="iot-dashboard">
-      <div class="dashboard-header">
-        <h2>Панель управления IoT-устройствами</h2>
-        <button class="close-btn" @click="showIoTDashboard = false">×</button>
+
+    <!-- IoT Дашборд (компактный, встроенный) -->
+    <div v-if="showIoTDashboard && !isMinimized" class="iot-dashboard-compact">
+      <div class="dashboard-header-compact">
+        <h4>IoT Панель</h4>
+        <button class="close-btn-compact" @click="showIoTDashboard = false">×</button>
       </div>
       
-      <div class="dashboard-content">
-        <div class="dashboard-summary">
-          <div class="summary-item">
-            <span class="summary-value">{{ getTotalSocketsCount() }}</span>
-            <span class="summary-label">Всего устройств</span>
+      <div class="dashboard-content-compact">
+        <div class="dashboard-summary-compact">
+          <div class="summary-item-compact">
+            <span class="summary-value-compact">{{ getTotalSocketsCount() }}</span>
+            <span class="summary-label-compact">Всего</span>
           </div>
-          <div class="summary-item">
-            <span class="summary-value">{{ getActiveSocketsCount() }}</span>
-            <span class="summary-label">Активных</span>
+          <div class="summary-item-compact">
+            <span class="summary-value-compact">{{ getActiveSocketsCount() }}</span>
+            <span class="summary-label-compact">Активно</span>
           </div>
-          <div class="summary-item">
-            <span class="summary-value">{{ getTotalPowerConsumption() }} Вт</span>
-            <span class="summary-label">Общее потребление</span>
-          </div>
-        </div>
-        
-        <div class="dashboard-filters">
-          <div class="filter-item">
-            <label for="deviceTypeFilter">Фильтр по типу:</label>
-            <select id="deviceTypeFilter" v-model="iotDashboardFilter.deviceType">
-              <option value="all">Все типы</option>
-              <option v-for="type in socketDeviceTypes" :key="type.value" :value="type.value">
-                {{ type.label }}
-              </option>
-            </select>
-          </div>
-          <div class="filter-item">
-            <label>Состояние:</label>
-            <div class="filter-buttons">
-              <button 
-                @click="iotDashboardFilter.state = 'all'" 
-                :class="{ active: iotDashboardFilter.state === 'all' }"
-              >
-                Все
-              </button>
-              <button 
-                @click="iotDashboardFilter.state = 'on'" 
-                :class="{ active: iotDashboardFilter.state === 'on' }"
-              >
-                Вкл
-              </button>
-              <button 
-                @click="iotDashboardFilter.state = 'off'" 
-                :class="{ active: iotDashboardFilter.state === 'off' }"
-              >
-                Выкл
-              </button>
-            </div>
+          <div class="summary-item-compact">
+            <span class="summary-value-compact">{{ getTotalPowerConsumption() }}</span>
+            <span class="summary-label-compact">Вт</span>
           </div>
         </div>
         
-        <div class="device-list">
-          <div v-if="getFilteredSockets().length === 0" class="no-devices">
-            <p>Нет устройств, соответствующих фильтрам</p>
+        <div class="device-list-compact">
+          <div v-if="getFilteredSockets().length === 0" class="no-devices-compact">
+            <p>Нет устройств</p>
           </div>
           
           <div 
             v-for="socket in getFilteredSockets()" 
             :key="socket.getId()" 
-            class="device-item"
+            class="device-item-compact"
             :class="{ 'device-active': socket.getIsOn() }"
           >
-            <div class="device-icon" :class="'device-type-' + socket.getDeviceType()">
-              <div class="device-status-indicator" :class="{ 'on': socket.getIsOn() }"></div>
+            <div class="device-info-compact">
+              <span class="device-name-compact">{{ socket.getName() }}</span>
+              <span class="device-status-compact">{{ socket.getIsOn() ? 'Вкл' : 'Выкл' }}</span>
             </div>
-            <div class="device-info">
-              <div class="device-name">{{ socket.getName() }}</div>
-              <div class="device-details">
-                <span class="device-type">{{ getDeviceTypeLabel(socket.getDeviceType()) }}</span>
-                <span class="device-consumption">{{ socket.getPowerConsumption() }} Вт</span>
-              </div>
-            </div>
-            <div class="device-controls">
-              <button class="device-toggle-btn" @click="toggleDeviceFromDashboard(socket)">
-                {{ socket.getIsOn() ? 'Выкл' : 'Вкл' }}
-              </button>
-            </div>
+            <button class="device-toggle-btn-compact" @click="toggleDeviceFromDashboard(socket)">
+              {{ socket.getIsOn() ? '⏸️' : '▶️' }}
+            </button>
           </div>
         </div>
       </div>
@@ -330,7 +295,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { Room as RoomClass } from '../core/objects/Room'
@@ -339,7 +304,7 @@ import { Floor } from '../core/objects/Floor'
 import { SceneManager } from '../core/managers/SceneManager'
 import type { WallObjectType } from '../core/objects/WallObject'
 import { WallObject } from '../core/objects/WallObject'
-import { WALL_PARAMS, FLOOR_PARAMS, MARKER_PARAMS, DEBUG_PARAMS } from '../params/config'
+import { WALL_PARAMS, FLOOR_PARAMS, MARKER_PARAMS, DEBUG_PARAMS, SOCKET_PARAMS } from '../params/config'
 import { SelectionManager } from '../core/managers/SelectionManager'
 import { Socket, SocketDeviceType } from '../core/objects/Socket'
 import { Door } from '../core/objects/Door'
@@ -354,6 +319,8 @@ const selectedObjectType = ref<WallObjectType>('socket')
 const debugMode = ref(false)
 const isSelectMode = ref(false)
 const selectedObjectsCount = ref(0)
+const isMinimized = ref(false)
+const isFullscreen = ref(false)
 let selectionMethod: 'raycast' | 'boundingBox' = 'boundingBox'
 
 let scene: THREE.Scene
@@ -1081,6 +1048,8 @@ const updateSocketName = () => {
   if (!socket) return
   
   socket.setName(selectedSocketProperties.value.name)
+  // Принудительно обновляем интерфейсы для синхронизации
+  forceUpdateAllInterfaces()
 }
 
 // Обновить тип устройства розетки
@@ -1089,6 +1058,8 @@ const updateSocketType = () => {
   if (!socket) return
   
   socket.setDeviceType(selectedSocketProperties.value.deviceType)
+  // Принудительно обновляем интерфейсы для синхронизации
+  forceUpdateAllInterfaces()
 }
 
 // Переключить питание розетки
@@ -1101,6 +1072,9 @@ const toggleSocketPower = () => {
   } else {
     socket.turnOff()
   }
+  
+  // Принудительно обновляем все связанные интерфейсы
+  forceUpdateAllInterfaces()
 }
 
 // Обновить потребление энергии
@@ -1109,6 +1083,8 @@ const updateSocketPowerConsumption = () => {
   if (!socket) return
   
   socket.setPowerConsumption(selectedSocketProperties.value.powerConsumption)
+  // Принудительно обновляем интерфейсы для синхронизации
+  forceUpdateAllInterfaces()
 }
 
 // Модифицируем селектор, чтобы обновлять свойства розетки при выделении
@@ -1187,6 +1163,9 @@ const getDeviceTypeLabel = (deviceType: SocketDeviceType): string => {
 // Функция для переключения устройства из дашборда
 const toggleDeviceFromDashboard = (socket: Socket): void => {
   socket.toggle()
+  
+  // Принудительно обновляем все связанные интерфейсы
+  forceUpdateAllInterfaces()
 }
 
 // Функция для переключения меню сохранения
@@ -1323,6 +1302,9 @@ const loadFromLocalStorage = (projectName: string) => {
       }
     })
     
+    // Принудительно обновляем все интерфейсы после загрузки
+    forceUpdateAllInterfaces()
+    
     showLoadMenu.value = false
     alert('Проект успешно загружен')
   } catch (error) {
@@ -1358,6 +1340,17 @@ const clearScene = () => {
   // Очищаем выделение
   selectionManager.clear()
   updateSelectedObjectsCount()
+  
+  // Сбрасываем свойства выделенной розетки
+  selectedSocketProperties.value = {
+    name: '',
+    deviceType: SocketDeviceType.POWER,
+    isOn: false,
+    powerConsumption: 0
+  }
+  
+  // Принудительно обновляем все интерфейсы после очистки
+  forceUpdateAllInterfaces()
 }
 
 // Функция для активации выбора файла
@@ -1393,6 +1386,9 @@ const handleFileImport = (event: Event) => {
             sceneManager.add(room)
           }
         })
+        
+        // Принудительно обновляем все интерфейсы после импорта
+        forceUpdateAllInterfaces()
         
         showLoadMenu.value = false
         alert('Проект успешно импортирован')
@@ -1443,328 +1439,415 @@ onUnmounted(() => {
   // Удаляем предпросмотр комнаты
   if (roomPreview) roomPreview.remove();
 })
+
+// Новая функция для принудительного обновления всех интерфейсов
+const forceUpdateAllInterfaces = () => {
+  console.log('🔄 Принудительное обновление всех интерфейсов...')
+  
+  try {
+    // Обновляем информацию о выделенной розетке в панели выделения
+    updateSelectedSocketInfo()
+    
+    // Принудительно обновляем счетчики выделенных объектов
+    updateSelectedObjectsCount()
+    
+    // Принудительно обновляем Vue реактивность для дашборда
+    // Это заставит пересчитать все геттеры статистики
+    const currentFilter = iotDashboardFilter.value
+    iotDashboardFilter.value = { ...currentFilter }
+    
+    // Добавляем небольшую задержку для обеспечения обновления Vue reactivity
+    nextTick(() => {
+      console.log('✅ Интерфейсы обновлены успешно')
+      
+      // Логгируем текущую статистику для отладки
+      const totalSockets = getTotalSocketsCount()
+      const activeSockets = getActiveSocketsCount()
+      const totalPower = getTotalPowerConsumption()
+      
+      console.log(`📊 Статистика: ${totalSockets} розеток, ${activeSockets} активных, ${totalPower}Вт потребление`)
+    })
+  } catch (error) {
+    console.error('❌ Ошибка при обновлении интерфейсов:', error)
+  }
+}
 </script>
 
 <style scoped>
+.room-editor-window {
+  width: 800px;
+  height: 600px;
+  position: relative;
+  background: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  resize: both;
+  min-width: 400px;
+  min-height: 300px;
+  max-width: 95vw;
+  max-height: 95vh;
+}
+
+.room-editor-window.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999;
+  resize: none;
+  border-radius: 0;
+}
+
+.window-header {
+  background: #1976d2;
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: move;
+  user-select: none;
+}
+
+.window-title h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.window-controls {
+  display: flex;
+  gap: 5px;
+}
+
+.minimize-btn,
+.fullscreen-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.minimize-btn:hover,
+.fullscreen-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.window-content {
+  height: calc(100% - 48px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.window-content.minimized {
+  display: none;
+}
+
+.window-content.fullscreen {
+  height: calc(100vh - 48px);
+}
+
 .room-editor {
   width: 100%;
-  height: 100vh;
-  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background: #f5f5f5;
 }
 
 .editor-container {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 200px;
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 10px;
 }
 
-.editor-controls {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: rgba(40, 44, 52, 0.85); /* Темный фон с прозрачностью */
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+.editor-controls-compact {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
-  color: #ffffff; /* Белый текст для контраста */
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: rgba(40, 44, 52, 0.9);
+  border-radius: 6px;
+  gap: 10px;
 }
 
 .main-modes {
   display: flex;
-  gap: 10px;
-}
-
-.main-modes button {
-  flex: 1;
-  font-weight: bold;
-  background: #3a3f4b; /* Темно-серый фон */
-  color: #ffffff; /* Белый текст */
-}
-
-.mode-controls {
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.submodes {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.submodes button {
-  flex: 1;
-  background: #3a3f4b; /* Темно-серый фон */
-  color: #ffffff; /* Белый текст */
-}
-
-button {
-  margin: 5px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  background: #3a3f4b; /* Темно-серый фон */
-  color: #ffffff; /* Белый текст */
-  cursor: pointer;
-  transition: background 0.3s, transform 0.1s;
-  font-weight: 500;
-}
-
-button:hover {
-  background: #4a5064; /* Немного светлее при наведении */
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-button.active {
-  background: #2196f3; /* Яркий синий для активного состояния */
-  color: white;
-}
-
-button:disabled,
-button.disabled {
-  background: #2a2e36; /* Более темный для отключенного состояния */
-  color: #6c7280; /* Серый текст */
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-button:disabled:hover,
-button.disabled:hover {
-  background: #2a2e36;
-  transform: none;
-}
-
-.wall-height-control {
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #ffffff; /* Белый текст */
-}
-
-.wall-height-control span {
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.object-controls {
-  display: flex;
-  flex-direction: column;
   gap: 5px;
 }
 
-input[type="range"] {
-  width: 150px;
-  accent-color: #2196f3; /* Подсветка слайдера */
+.mode-btn {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0;
 }
 
-.selection-panel {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(40, 44, 52, 0.85); /* Темный фон с прозрачностью */
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  min-width: 300px;
-  max-width: 350px;
-  color: #ffffff; /* Белый текст */
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.control-buttons-compact {
+  display: flex;
+  gap: 5px;
 }
 
-.selection-info {
+.control-buttons-compact button {
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  margin: 0;
+  min-width: 32px;
+}
+
+.mode-controls-compact {
+  padding: 8px 12px;
+  background: rgba(45, 50, 60, 0.8);
+  border-radius: 6px;
   margin-bottom: 10px;
-}
-
-.selection-count {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 5px;
-  color: #ffffff;
-}
-
-.selection-types {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
 }
 
-.selection-types span {
-  background: #3a3f4b;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.9rem;
+.wall-height-control-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #ffffff;
 }
 
-.delete-button {
+.wall-height-control-compact label {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.wall-height-control-compact input[type="range"] {
+  width: 100px;
+}
+
+.wall-height-control-compact span {
+  font-size: 0.85rem;
+  min-width: 40px;
+}
+
+.submodes-compact {
+  display: flex;
+  gap: 5px;
+}
+
+.submode-btn {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.object-controls-compact {
+  display: flex;
+  gap: 5px;
+}
+
+.object-btn {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  margin: 0;
+  background: #4CAF50;
+  color: white;
+}
+
+.object-btn:hover {
+  background: #45a049;
+}
+
+.action-controls-compact {
+  display: flex;
+  gap: 5px;
+}
+
+.delete-button-compact {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  margin: 0;
   background: #ff3b30;
   color: white;
 }
 
-.delete-button:hover {
+.delete-button-compact:hover {
   background: #ff584f;
 }
 
-.action-controls {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.action-button {
+.action-button-compact {
+  padding: 6px 12px;
+  font-size: 0.85rem;
   background: #4CAF50;
   color: white;
-  font-weight: bold;
+  font-weight: 500;
+  margin: 0;
 }
 
-.action-button:hover {
+.action-button-compact:hover {
   background: #45a049;
 }
 
-.cancel-button {
+.cancel-button-compact {
+  padding: 4px 8px;
+  font-size: 0.8rem;
   background: #f44336;
   color: white;
-  margin-left: 10px;
+  margin: 0;
+  margin-left: 8px;
 }
 
-.cancel-button:hover {
+.cancel-button-compact:hover {
   background: #d32f2f;
 }
 
-.creation-instructions {
-  margin-top: 10px;
-  padding: 10px;
-  background: rgba(45, 50, 60, 0.7);
-  border-radius: 4px;
+.creation-instructions-compact {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   color: #ffffff;
 }
 
 .creation-step {
-  font-weight: bold;
-  color: #42a5f5; /* Более яркий синий */
+  font-size: 0.85rem;
+  color: #42a5f5;
 }
 
-/* Стили для панели свойств */
-.socket-properties {
-  margin-top: 10px;
+/* Компактные панели */
+.selection-panel-compact {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(40, 44, 52, 0.95);
   padding: 10px;
-  background: rgba(45, 50, 60, 0.8);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  min-width: 250px;
+  max-width: 300px;
   color: #ffffff;
+  font-size: 0.85rem;
 }
 
-.socket-properties h3 {
-  color: #ffffff;
-}
-
-.property-group {
+.selection-info-compact {
   margin-bottom: 8px;
+}
+
+.selection-count {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.socket-properties-compact {
+  margin-top: 8px;
+}
+
+.property-row {
   display: flex;
   align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-.property-group label {
-  flex: 0 0 120px;
-  font-size: 0.9rem;
+.property-row label {
+  flex: 0 0 80px;
+  font-size: 0.8rem;
   color: #e0e0e0;
 }
 
-.property-group input[type="text"],
-.property-group input[type="number"],
-.property-group select {
+.property-input,
+.property-select {
   flex: 1;
-  padding: 5px 8px;
+  padding: 4px 6px;
   border: 1px solid #555;
   background: #2a2e36;
   color: #ffffff;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
 }
 
-/* Стили для переключателя */
-.toggle-switch {
+.unit {
+  font-size: 0.8rem;
+  color: #b0b0b0;
+}
+
+.toggle-switch-compact {
   position: relative;
   display: inline-block;
 }
 
-.toggle-switch input {
+.toggle-switch-compact input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.toggle-switch label {
+.toggle-switch-compact label {
   position: relative;
   display: inline-block;
-  padding-left: 50px;
+  padding-left: 35px;
   cursor: pointer;
   user-select: none;
+  font-size: 0.8rem;
 }
 
-.toggle-switch label:before {
+.toggle-switch-compact label:before {
   content: '';
   position: absolute;
   left: 0;
-  top: -2px;
-  width: 40px;
-  height: 20px;
+  top: -1px;
+  width: 28px;
+  height: 14px;
   background: #ccc;
-  border-radius: 10px;
+  border-radius: 7px;
   transition: 0.3s;
 }
 
-.toggle-switch label:after {
+.toggle-switch-compact label:after {
   content: '';
   position: absolute;
-  left: 3px;
+  left: 2px;
   top: 1px;
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   background: white;
   border-radius: 50%;
   transition: 0.3s;
 }
 
-.toggle-switch input:checked + label:before {
+.toggle-switch-compact input:checked + label:before {
   background: #4cd964;
 }
 
-.toggle-switch input:checked + label:after {
-  left: 23px;
+.toggle-switch-compact input:checked + label:after {
+  left: 16px;
 }
 
-/* Стили для IoT-дашборда */
-.iot-dashboard {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 400px;
-  max-height: 80vh;
+/* IoT Dashboard Compact */
+.iot-dashboard-compact {
+  position: absolute;
+  top: 60px;
+  right: 10px;
+  width: 280px;
+  max-height: 400px;
   background: rgba(40, 44, 52, 0.95);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
-.dashboard-header {
-  padding: 15px;
+.dashboard-header-compact {
+  padding: 10px 12px;
   background: #1976d2;
   color: white;
   display: flex;
@@ -1772,439 +1855,311 @@ input[type="range"] {
   align-items: center;
 }
 
-.dashboard-header h2 {
+.dashboard-header-compact h4 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: #ffffff;
 }
 
-.close-btn {
+.close-btn-compact {
   background: transparent;
   border: none;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   cursor: pointer;
-  padding: 0 5px;
+  padding: 0 4px;
 }
 
-.dashboard-content {
-  padding: 15px;
+.dashboard-content-compact {
+  padding: 10px;
   overflow-y: auto;
-  max-height: calc(80vh - 60px);
-  color: #ffffff;
+  max-height: 350px;
 }
 
-.dashboard-summary {
+.dashboard-summary-compact {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  justify-content: space-around;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.summary-item {
+.summary-item-compact {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.summary-value {
-  font-size: 1.5rem;
+.summary-value-compact {
+  font-size: 1.1rem;
   font-weight: bold;
   color: #42a5f5;
 }
 
-.summary-label {
-  font-size: 0.8rem;
+.summary-label-compact {
+  font-size: 0.7rem;
   color: #e0e0e0;
-  margin-top: 5px;
+  margin-top: 2px;
 }
 
-.dashboard-filters {
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.filter-item {
+.device-list-compact {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
-.filter-item label {
-  font-size: 0.9rem;
-  color: #e0e0e0;
-}
-
-.filter-item select {
-  padding: 5px 8px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  min-width: 150px;
-  background: #2a2e36;
-  color: #ffffff;
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 5px;
-}
-
-.filter-buttons button {
-  padding: 5px 10px;
-  font-size: 0.8rem;
-  margin: 0;
-  background: #3a3f4b;
-  color: #ffffff;
-}
-
-.filter-buttons button:hover {
-  background: #4a5064;
-}
-
-.device-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.no-devices {
-  padding: 20px 0;
+.no-devices-compact {
   text-align: center;
   color: #a0a0a0;
+  padding: 15px 0;
+  font-size: 0.85rem;
 }
 
-.device-item {
+.device-item-compact {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 8px;
   background: rgba(45, 50, 60, 0.7);
-  border-radius: 8px;
-  gap: 12px;
+  border-radius: 4px;
+  gap: 8px;
+  font-size: 0.8rem;
 }
 
 .device-active {
   background: rgba(76, 217, 100, 0.15);
-  border-left: 3px solid #4cd964;
+  border-left: 2px solid #4cd964;
 }
 
-.device-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #3a3f4b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.device-status-indicator {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #555;
-  border: 2px solid #2a2e36;
-}
-
-.device-status-indicator.on {
-  background: #4cd964;
-}
-
-.device-info {
+.device-info-compact {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.device-name {
+.device-name-compact {
   font-weight: 500;
-  margin-bottom: 3px;
   color: #ffffff;
 }
 
-.device-details {
-  font-size: 0.8rem;
+.device-status-compact {
   color: #b0b0b0;
-  display: flex;
-  gap: 10px;
 }
 
-.device-controls {
-  display: flex;
-  gap: 5px;
-}
-
-.device-toggle-btn {
-  padding: 5px 10px;
+.device-toggle-btn-compact {
+  padding: 4px 6px;
   font-size: 0.8rem;
   margin: 0;
   background: #3a3f4b;
   color: #ffffff;
+  min-width: 28px;
 }
 
-.device-toggle-btn:hover {
+.device-toggle-btn-compact:hover {
   background: #4a5064;
 }
 
-/* Стили для разных типов устройств */
-.device-type-power {
-  background: rgba(70, 70, 70, 0.3);
+/* Меню компактные */
+.save-menu-compact,
+.load-menu-compact {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  background: rgba(40, 44, 52, 0.98);
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
-.device-type-light {
-  background: rgba(255, 204, 0, 0.2);
+.menu-header-compact {
+  padding: 10px 12px;
+  background: #1976d2;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.device-type-climate {
-  background: rgba(0, 204, 255, 0.2);
+.menu-header-compact h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
-.device-type-security {
-  background: rgba(255, 50, 50, 0.2);
+.menu-content-compact {
+  padding: 12px;
 }
 
-.device-type-media {
-  background: rgba(153, 50, 204, 0.2);
+.input-group-compact {
+  margin-bottom: 10px;
 }
 
-.dashboard-control {
-  margin-top: 10px;
+.input-group-compact label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  color: #e0e0e0;
 }
 
-/* Стили для сохранённых проектов */
-.saved-projects-list {
-  max-height: 250px;
+.input-group-compact input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background: #2a2e36;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.button-group-compact {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.primary-btn-compact,
+.secondary-btn-compact {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.3s;
+  font-weight: 500;
+  flex: 1;
+}
+
+.primary-btn-compact {
+  background: #2196f3;
+  color: white;
+}
+
+.primary-btn-compact:hover {
+  background: #1976d2;
+}
+
+.secondary-btn-compact {
+  background: #3a3f4b;
+  color: #ffffff;
+}
+
+.secondary-btn-compact:hover {
+  background: #4a5064;
+}
+
+.saved-projects-list-compact {
+  max-height: 150px;
   overflow-y: auto;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   background: rgba(35, 39, 45, 0.7);
 }
 
-.saved-project {
-  padding: 12px;
+.saved-project-compact {
+  padding: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
 }
 
-.saved-project:last-child {
+.saved-project-compact:last-child {
   border-bottom: none;
 }
 
-.project-info {
+.project-info-compact {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .project-name {
   font-weight: 500;
-  margin-bottom: 3px;
   color: #ffffff;
 }
 
 .project-date {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #b0b0b0;
 }
 
-.project-actions {
+.project-actions-compact {
   display: flex;
-  gap: 5px;
+  gap: 4px;
 }
 
-.action-btn {
-  padding: 4px 8px;
+.action-btn-compact {
+  padding: 4px 6px;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   font-size: 0.8rem;
   background: #3a3f4b;
   color: #ffffff;
+  min-width: 24px;
 }
 
-.action-btn:hover {
+.action-btn-compact:hover {
   background: #4a5064;
 }
 
-.action-btn.delete {
+.action-btn-compact.delete {
   color: #ff584f;
 }
 
-.action-btn.delete:hover {
+.action-btn-compact.delete:hover {
   background: rgba(255, 70, 70, 0.2);
 }
 
-.no-saved-projects {
+.no-saved-projects-compact {
   text-align: center;
   color: #a0a0a0;
-  padding: 20px 0;
+  padding: 15px 0;
+  font-size: 0.8rem;
 }
 
-.import-section {
-  margin-top: 20px;
-  padding-top: 20px;
+.import-section-compact {
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.import-section h4 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #ffffff;
+/* Адаптивность */
+@media (max-width: 600px) {
+  .room-editor-window {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0;
+    resize: none;
+  }
+  
+  .editor-controls-compact {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .mode-controls-compact {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
-/* Стиль для невидимого input для загрузки файла */
-.hidden-file-input {
+/* Режим минимизации */
+.room-editor-window.minimized {
+  height: 48px !important;
+  resize: none;
+}
+
+.room-editor-window.minimized .window-content {
   display: none;
-}
-
-/* Стили предпросмотра комнаты */
-.room-preview {
-  pointer-events: none;
-  opacity: 0.7;
-}
-
-.room-preview.valid {
-  opacity: 0.7;
-}
-
-.room-preview.invalid {
-  opacity: 0.7;
-  color: #ff584f;
-}
-
-.debug-control {
-  margin-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  padding-top: 10px;
-}
-
-/* Стили для кнопок Debug и IoT */
-.control-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.save-load-buttons {
-  display: flex;
-  gap: 5px;
-  margin-top: 5px;
-}
-
-.save-load-buttons button {
-  flex: 1;
-  background: #3a3f4b; /* Темно-серый фон */
-}
-
-/* Стили для меню сохранения/загрузки */
-.save-menu,
-.load-menu {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 400px;
-  background: rgba(40, 44, 52, 0.95);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-
-.menu-header {
-  padding: 15px;
-  background: #1976d2; /* Более темный синий */
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.menu-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #ffffff;
-}
-
-.menu-content {
-  padding: 20px;
-  color: #ffffff;
-}
-
-.input-group {
-  margin-bottom: 15px;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
-  color: #e0e0e0;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  font-size: 1rem;
-  background: #2a2e36;
-  color: #ffffff;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.primary-btn,
-.secondary-btn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.3s;
-  font-weight: 500;
-}
-
-.primary-btn {
-  background: #2196f3;
-  color: white;
-  flex: 1;
-}
-
-.primary-btn:hover {
-  background: #1976d2;
-}
-
-.secondary-btn {
-  background: #3a3f4b;
-  color: #ffffff;
-  flex: 1;
-}
-
-.secondary-btn:hover {
-  background: #4a5064;
 }
 </style> 
