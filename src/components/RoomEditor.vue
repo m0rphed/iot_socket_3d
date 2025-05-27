@@ -246,6 +246,9 @@
       </div>
     </div>
 
+    <!-- Мобильный overlay для IoT панели -->
+    <div v-if="showIoTDashboard && !isMinimized" class="iot-dashboard-overlay" @click="showIoTDashboard = false"></div>
+
     <!-- IoT Дашборд (компактный, встроенный) -->
     <div v-if="showIoTDashboard && !isMinimized" class="iot-dashboard-compact">
       <div class="dashboard-header-compact">
@@ -323,7 +326,7 @@ const isSelectMode = ref(false)
 const selectedObjectsCount = ref(0)
 const isMinimized = ref(false)
 const isFullscreen = ref(false)
-let selectionMethod: 'raycast' | 'boundingBox' = 'boundingBox'
+let selectionMethod: 'raycast' | 'boundingBox' = 'raycast'
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -2442,9 +2445,166 @@ defineExpose({
 
 @media (max-width: 768px) {
   .iot-dashboard-compact {
-    width: 100%;
-    position: static;
-    margin-top: 20px;
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: auto !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 380px !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    z-index: 1500 !important;
+    margin: 0 !important;
+    /* backdrop-filter: none !important; */
+  }
+  
+  .dashboard-content-compact {
+    padding: 16px !important;
+  }
+  
+  .dashboard-summary-compact {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .summary-item-compact {
+    padding: 8px !important;
+  }
+  
+  .summary-value-compact {
+    font-size: 1.25rem !important;
+  }
+  
+  .summary-label-compact {
+    font-size: 0.7rem !important;
+  }
+  
+  .device-list-compact {
+    max-height: 150px !important;
+  }
+  
+  .device-item-compact {
+    padding: 10px 12px !important;
+    margin-bottom: 6px !important;
+  }
+  
+  .device-name-compact {
+    font-size: 0.8rem !important;
+  }
+  
+  .device-status-compact {
+    font-size: 0.7rem !important;
+  }
+  
+  .device-toggle-btn-compact {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .iot-dashboard-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    z-index: 1400 !important;
+    cursor: pointer !important;
+    display: block !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .iot-dashboard-compact {
+    bottom: 16px !important;
+    width: calc(100vw - 24px) !important;
+    max-height: 65vh !important;
+  }
+  
+  .dashboard-header-compact {
+    padding: 12px 16px !important;
+  }
+  
+  .dashboard-header-compact h4 {
+    font-size: 0.9rem !important;
+  }
+  
+  .dashboard-content-compact {
+    padding: 12px !important;
+  }
+  
+  .dashboard-summary-compact {
+    gap: 6px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .summary-item-compact {
+    padding: 6px !important;
+  }
+  
+  .summary-value-compact {
+    font-size: 1.1rem !important;
+  }
+  
+  .summary-label-compact {
+    font-size: 0.65rem !important;
+  }
+  
+  .device-list-compact {
+    max-height: 120px !important;
+  }
+  
+  .device-item-compact {
+    padding: 8px 10px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .device-name-compact {
+    font-size: 0.75rem !important;
+  }
+  
+  .device-status-compact {
+    font-size: 0.65rem !important;
+  }
+  
+  .device-toggle-btn-compact {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+/* Мобильный overlay для IoT панели */
+.iot-dashboard-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  cursor: pointer;
+}
+
+/* Мобильный overlay для IoT панели */
+.iot-dashboard-overlay {
+  display: none; /* Скрыт по умолчанию на desktop */
+}
+
+@media (max-width: 768px) {
+  .iot-dashboard-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    z-index: 1400 !important;
+    cursor: pointer !important;
+    display: block !important;
   }
 }
 </style> 
