@@ -42,100 +42,15 @@ export class Room extends SceneObject {
     return { width: this.width, height: this.height }
   }
 
-  setSize(width: number, height: number) {
-    // Проверка валидности входных данных
-    if (!isFinite(width) || width <= 0 || !isFinite(height) || height <= 0) {
-      console.error(`Invalid room dimensions: width=${width}, height=${height}`);
-      return;
-    }
+  setSize(newWidth: number, newHeight: number): void {
+    this.width = newWidth;
+    this.height = newHeight;
     
-    const oldWidth = this.width;
-    const oldHeight = this.height;
-    this.width = width;
-    this.height = height;
-    
-    // Обновляем геометрии стен
-    for (let i = 0; i < this.walls.length; i++) {
-      const wall = this.walls[i];
-      const thickness = wall.getThickness();
-      
-      // Определяем ориентацию стены по её повороту
-      const rotY = Math.round(wall.mesh.rotation.y * 2 / Math.PI) * Math.PI / 2;
-      const isVertical = Math.abs(rotY) === Math.PI / 2;
-      
-      let wallWidth, wallDepth;
-      
-      if (isVertical) {
-        // Для стен, повернутых на 90 градусов (левая/правая)
-        wallWidth = this.height;  // Ширина равна глубине комнаты
-        wallDepth = thickness;
-        
-        // Устанавливаем позицию для левой/правой стены
-        if (rotY > 0) { // Правая стена
-          wall.mesh.position.set(this.width / 2, this.wallHeight / 2, 0);
-        } else { // Левая стена
-          wall.mesh.position.set(-this.width / 2, this.wallHeight / 2, 0);
-        }
-      } else {
-        // Для стен без поворота или повернутых на 180 градусов (фронтальная/задняя)
-        wallWidth = this.width;   // Ширина равна ширине комнаты
-        wallDepth = thickness;
-        
-        // Устанавливаем позицию для передней/задней стены
-        if (Math.abs(rotY) < 0.01) { // Передняя стена
-          wall.mesh.position.set(0, this.wallHeight / 2, -this.height / 2);
-        } else { // Задняя стена
-          wall.mesh.position.set(0, this.wallHeight / 2, this.height / 2);
-        }
-      }
-      
-      // Создаем новую геометрию
-      wall.mesh.geometry.dispose();
-      wall.mesh.geometry = new THREE.BoxGeometry(wallWidth, this.wallHeight, wallDepth);
-      
-      // Используем новый метод для обновления контура
-      wall.outline = this.updateOutline(wall.mesh, wall.outline);
-      
-      // Добавляем обратно в группу комнаты, если не была добавлена
-      if (!this.object3D.children.includes(wall.mesh)) {
-        this.object3D.add(wall.mesh);
-      }
-    }
-    
-    // Обновляем пол
-    this.floor.mesh.geometry.dispose();
-    this.floor.mesh.geometry = new THREE.BoxGeometry(this.width, 0.1, this.height);
-    this.floor.mesh.position.set(0, -0.05, 0);
-    
-    // Обновляем контур пола с использованием нашего метода
-    this.floor.outline = this.updateOutline(this.floor.mesh, this.floor.outline);
+    // Обновляем стены
+    this.updateWalls();
     
     // Обновляем маркеры изменения размера
-    this.createResizeMarkers();
-    
-    // Обновляем объекты на стенах
-    // Сохраняем объекты, которые нужно обновить
-    const wallObjectsToUpdate = [...this.wallObjects];
-    
-    // Временно очищаем массив wallObjects, чтобы addWallObject не добавлял дублирующие объекты
-    this.wallObjects = [];
-    
-    // Проходим по всем объектам и пересоздаем их для новых размеров стен
-    wallObjectsToUpdate.forEach(wallObject => {
-      const wall = wallObject.getWall();
-      const position = wallObject.getPosition();
-      const type = wallObject.getType();
-      
-      // Удаляем старый объект из сцены
-      this.object3D.remove(wallObject.getObject());
-      
-      // Создаем новый объект с теми же параметрами
-      if (type === 'socket') {
-        this.addSocket(wall, position);
-      } else if (type === 'door') {
-        this.addDoor(wall, position);
-      }
-    });
+    this.updateResizeMarkers();
   }
 
   setWallHeight(height: number) {
@@ -148,7 +63,7 @@ export class Room extends SceneObject {
     this.wallHeight = height;
     
     // Обновляем геометрии стен
-    this.walls.forEach((wall, index) => {
+    this.walls.forEach((wall) => {
       // Получаем текущие размеры стены
       const currentSize = new THREE.Vector3();
       wall.mesh.geometry.computeBoundingBox();
@@ -625,5 +540,63 @@ export class Room extends SceneObject {
     // Если не удалось определить, возвращаем значение по умолчанию
     console.warn('Could not determine room height/depth, using default 4');
     return 4;
+  }
+
+  private updateWalls(): void {
+    this.walls.forEach((wall) => {
+      // Получаем текущие размеры стены
+      const currentSize = new THREE.Vector3();
+      wall.mesh.geometry.computeBoundingBox();
+      wall.mesh.geometry.boundingBox?.getSize(currentSize);
+      
+      const thickness = wall.getThickness();
+      
+      // Определяем ориентацию стены по её повороту
+      const rotY = Math.round(wall.mesh.rotation.y * 2 / Math.PI) * Math.PI / 2;
+      const isVertical = Math.abs(rotY) === Math.PI / 2;
+      
+      let wallWidth, wallDepth;
+      
+      if (isVertical) {
+        // Для стен, повернутых на 90 градусов (левая/правая)
+        wallWidth = this.height;  // Ширина равна глубине комнаты
+        wallDepth = thickness;
+        
+        // Устанавливаем позицию для левой/правой стены
+        if (rotY > 0) { // Правая стена
+          wall.mesh.position.set(this.width / 2, this.wallHeight / 2, 0);
+        } else { // Левая стена
+          wall.mesh.position.set(-this.width / 2, this.wallHeight / 2, 0);
+        }
+      } else {
+        // Для стен без поворота или повернутых на 180 градусов (фронтальная/задняя)
+        wallWidth = this.width;   // Ширина равна ширине комнаты
+        wallDepth = thickness;
+        
+        // Устанавливаем позицию для передней/задней стены
+        if (Math.abs(rotY) < 0.01) { // Передняя стена
+          wall.mesh.position.set(0, this.wallHeight / 2, -this.height / 2);
+        } else { // Задняя стена
+          wall.mesh.position.set(0, this.wallHeight / 2, this.height / 2);
+        }
+      }
+      
+      // Создаем новую геометрию
+      wall.mesh.geometry.dispose();
+      wall.mesh.geometry = new THREE.BoxGeometry(wallWidth, this.wallHeight, wallDepth);
+      
+      // Используем новый метод для обновления контура
+      wall.outline = this.updateOutline(wall.mesh, wall.outline);
+      
+      // Добавляем обратно в группу комнаты, если не была добавлена
+      if (!this.object3D.children.includes(wall.mesh)) {
+        this.object3D.add(wall.mesh);
+      }
+    });
+  }
+
+  private updateResizeMarkers(): void {
+    // Обновляем маркеры изменения размера
+    this.createResizeMarkers();
   }
 } 

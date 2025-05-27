@@ -1,7 +1,6 @@
 import * as THREE from 'three'
-import { Room } from '../objects/Room'
+import type { Room } from '../objects/Room'
 import { Wall } from '../objects/Wall'
-import { DEBUG_PARAMS } from '../../params/config'
 
 /**
  * Класс для отладочной визуализации

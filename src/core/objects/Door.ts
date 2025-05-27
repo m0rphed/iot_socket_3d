@@ -1,6 +1,5 @@
 import { WallObject } from './WallObject'
 import { Wall } from './Wall'
-import * as THREE from 'three'
 import { DOOR_PARAMS } from '../../params/config'
 
 export class Door extends WallObject {

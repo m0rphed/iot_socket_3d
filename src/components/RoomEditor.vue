@@ -297,17 +297,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick, defineExpose } from 'vue'
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { Room as RoomClass } from '../core/objects/Room'
-import { Wall } from '../core/objects/Wall'
-import { Floor } from '../core/objects/Floor'
+// import { Wall } from '../core/objects/Wall'
 import { SceneManager } from '../core/managers/SceneManager'
 import type { WallObjectType } from '../core/objects/WallObject'
 import { WallObject } from '../core/objects/WallObject'
-import { WALL_PARAMS, FLOOR_PARAMS, MARKER_PARAMS, DEBUG_PARAMS, SOCKET_PARAMS } from '../params/config'
+import { SOCKET_PARAMS } from '../params/config'
 import { SelectionManager } from '../core/managers/SelectionManager'
 import { Socket, SocketDeviceType } from '../core/objects/Socket'
-import { Door } from '../core/objects/Door'
 import { DebugHelper } from '../core/utils/DebugHelper'
 import { RoomFactory } from '../core/factories/RoomFactory'
 import { RoomPreview } from '../core/preview/RoomPreview'
@@ -325,7 +323,7 @@ const isSelectMode = ref(false)
 const selectedObjectsCount = ref(0)
 const isMinimized = ref(false)
 const isFullscreen = ref(false)
-let selectionMethod: 'raycast' | 'boundingBox' = 'boundingBox'
+let selectionMethod: 'raycast' | 'boundingBox' = 'raycast'
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -450,14 +448,6 @@ const init = () => {
   animate()
 }
 
-const addInnerRoomObject = (type: WallObjectType, wall: Wall, pos: number, room: RoomClass) => {
-  if (type === 'socket') {
-    return room.addSocket(wall, pos)
-  } else {
-    return room.addDoor(wall, pos)
-  }
-}
-
 // --- МОДИФИЦИРОВАННЫЙ onMouseDown ---
 const onMouseDown = (event: MouseEvent) => {
   const rect = container.value?.getBoundingClientRect()
@@ -496,12 +486,14 @@ const handleSelectionModeClick = (event: MouseEvent) => {
     )
   } else if (selectionMethod === 'boundingBox') {
     const allWallObjects = rooms.flatMap(room => room.getWallObjects())
-    foundWallObject = selectionManager.selectObjectByBoundingBox(
-      event, 
-      camera, 
-      allWallObjects, 
-      container.value
-    )
+    if (container.value) {
+      foundWallObject = selectionManager.selectObjectByBoundingBox(
+        event, 
+        camera, 
+        allWallObjects, 
+        container.value
+      )
+    }
   }
   
   if (foundWallObject) {
@@ -608,7 +600,9 @@ const handleRoomModeClick = (event: MouseEvent) => {
   
   // Стандартная обработка для режима комнат (изменение размера, перемещение)
   // Проверяем, является ли объект маркером изменения размера
-  const marker = event.target as THREE.Mesh
+  if (!event.target) return
+  
+  const marker = event.target as unknown as THREE.Mesh
   const room = rooms.find(room => room.getResizeMarkers().includes(marker))
   
   if (room) {
@@ -619,7 +613,7 @@ const handleRoomModeClick = (event: MouseEvent) => {
     controls.enabled = false
   } else {
     // Если это не маркер, проверяем, является ли объект частью комнаты
-    const roomObject = event.target as THREE.Object3D
+    const roomObject = event.target as unknown as THREE.Object3D
     selectedRoom = rooms.find(room => room.getObject() === roomObject) || null
     if (selectedRoom) {
       isDragging = true
@@ -630,25 +624,25 @@ const handleRoomModeClick = (event: MouseEvent) => {
 }
 
 // Модифицируем функцию handleRoomModeHover для отображения предпросмотра при создании комнаты
-const handleRoomModeHover = (event: MouseEvent) => {
+const handleRoomModeHover = (_event: MouseEvent) => {
   if (isCreatingRoom.value) {
-    const gridPoint = getGridPointFromMouse();
+    const gridPoint = getGridPointFromMouse()
     
     if (!gridPoint) {
       // Если не удалось получить точку на сетке, скрываем предпросмотр
-      roomPreview.remove();
-      return;
+      roomPreview.remove()
+      return
     }
     
     // Если есть начальная точка, обновляем предпросмотр
     if (roomStartPoint.value) {
       // Используем класс RoomPreview напрямую
-      roomPreview.update(roomStartPoint.value, gridPoint);
+      roomPreview.update(roomStartPoint.value, gridPoint)
       
       // Проверяем размер комнаты и меняем стиль курсора соответственно
       if (container.value) {
-        const isValidSize = roomPreview.isSizeValid(roomStartPoint.value, gridPoint, 1);
-        container.value.style.cursor = isValidSize ? 'crosshair' : 'not-allowed';
+        const isValidSize = roomPreview.isSizeValid(roomStartPoint.value, gridPoint, 1)
+        container.value.style.cursor = isValidSize ? 'crosshair' : 'not-allowed'
       }
     }
   }
@@ -753,7 +747,7 @@ const handleRoomResize = () => {
 const handleObjectModeHover = () => {
   // Используем метод из SceneManager
   raycaster.setFromCamera(mouse, camera)
-  const { wall: foundWall, room: foundRoom, intersectPoint, localX } = sceneManager.findWallByRaycaster(raycaster)
+  const { wall: foundWall, intersectPoint, localX } = sceneManager.findWallByRaycaster(raycaster)
   
   // Визуализация точки пересечения raycast со стеной
   if (intersectPoint) {
@@ -874,13 +868,14 @@ const setSelectMode = (value: boolean) => {
 
 const deleteSelectedObjects = () => {
   // Проверяем, что есть выделенные объекты
-  if (selectedObjectsCount.value === 0) return;
+  if (selectedObjectsCount.value === 0) return
 
   const selectedObjects = [...selectionManager.selectedObjects] // Создаем копию массива
   selectedObjects.forEach(obj => {
-    const room = rooms.find(room => room.getWallObjects().includes(obj))
+    const wallObj = obj as unknown as WallObject
+    const room = rooms.find(room => room.getWallObjects().includes(wallObj))
     if (room) {
-      room.removeWallObject(obj)
+      room.removeWallObject(wallObj)
     }
   })
   // Очищаем выделение и обновляем счетчик
@@ -892,7 +887,7 @@ const deleteSelectedObjects = () => {
 }
 
 const getSelectedTypeCount = (type: WallObjectType) => {
-  return selectionManager.selectedObjects.filter(obj => obj.getType() === type).length
+  return selectionManager.selectedObjects.filter(obj => (obj as unknown as WallObject).getType() === type).length
 }
 
 // Обновляем счетчик выделенных объектов
@@ -917,67 +912,69 @@ const handleObjectModeClick = (event: MouseEvent) => {
         sceneManager.getGhostWallObject()?.getType(), 
         sceneManager.getGhostWall()?.mesh.uuid,
         sceneManager.getGhostWallObject()?.getPosition()
-      );
+      )
       
-      sceneManager.placeGhostObject();
+      sceneManager.placeGhostObject()
       // Обновляем интерфейсы после размещения объекта
-      forceUpdateAllInterfaces();
-      return;
+      forceUpdateAllInterfaces()
+      return
     } catch (error) {
-      console.error('Error placing ghost object:', error);
+      console.error('Error placing ghost object:', error)
     }
   }
 
   // Проверяем, является ли объект стеной или объектом на стене
-  const mesh = event.target as THREE.Mesh;
+  if (!event.target) return
+  
+  const mesh = event.target as unknown as THREE.Mesh
   const room = rooms.find(room => 
     room.getWalls().some(w => w.mesh === mesh)
-  );
+  )
   
   if (room) {
     // Находим конкретную Wall, соответствующую THREE.Mesh
-    const wallObj = room.getWalls().find(w => w.mesh === mesh);
-    if (!wallObj) return;
+    const wallObj = room.getWalls().find(w => w.mesh === mesh)
+    if (!wallObj) return
 
     // Проверяем, не является ли объект частью существующего объекта на стене
-    const wallObject = room.getWallObjects().find(obj => obj.getObject() === event.target);
+    const wallObject = room.getWallObjects().find(obj => obj.getObject() === (event.target as unknown as THREE.Group))
     
     if (wallObject) {
       // Начинаем перетаскивание существующего объекта
-      selectedWallObject = wallObject;
-      selectedWallObject.startDrag(mouse);
-      controls.enabled = false;
+      selectedWallObject = wallObject
+      selectedWallObject.startDrag(mouse)
+      controls.enabled = false
     } else {
       // Добавляем новый объект на стену (только если не в режиме выделения)
       if (!isSelectMode.value) {
         // Используем raycaster для определения точки на стене
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObject(mesh, false);
+        raycaster.setFromCamera(mouse, camera)
+        const intersects = raycaster.intersectObject(mesh, false)
         
         if (intersects.length > 0) {
           // Получаем локальные координаты точки на стене
-          const localPoint = mesh.worldToLocal(intersects[0].point.clone());
-          const wallSize = new THREE.Vector3();
+          const localPoint = mesh.worldToLocal(intersects[0].point.clone())
+          const wallSize = new THREE.Vector3()
           console.log(`localPoint: ${localPoint}`)
-          mesh.geometry.computeBoundingBox();
-          mesh.geometry.boundingBox?.getSize(wallSize);
+          mesh.geometry.computeBoundingBox()
+          mesh.geometry.boundingBox?.getSize(wallSize)
           
           // Вычисляем позицию (0-1) на стене
           // почему localPoint.x / wallSize.x?
           // - потому что мы хотим получить позицию в процентах от ширины стены
-          const position = (localPoint.x / wallSize.x) + 0.5;
+          const position = (localPoint.x / wallSize.x) + 0.5
           
           // Добавляем объект на стену
           if (selectedObjectType.value === 'socket') {
             // Расчёт zOffset для розетки
-            const socketDepth = SOCKET_PARAMS.depth;
-            room.addSocket(wallObj, position, false, socketDepth);
+            const socketDepth = SOCKET_PARAMS.depth
+            room.addSocket(wallObj, position, false, socketDepth)
             // Обновляем интерфейсы после добавления розетки
-            forceUpdateAllInterfaces();
+            forceUpdateAllInterfaces()
           } else if (selectedObjectType.value === 'door') {
-            room.addDoor(wallObj, position);
+            room.addDoor(wallObj, position)
             // Обновляем интерфейсы после добавления двери
-            forceUpdateAllInterfaces();
+            forceUpdateAllInterfaces()
           }
         }
       }
@@ -997,12 +994,14 @@ const handleSelectionModeHover = (event: MouseEvent) => {
     )
   } else if (selectionMethod === 'boundingBox') {
     const allWallObjects = rooms.flatMap(room => room.getWallObjects())
-    found = selectionManager.selectObjectByBoundingBox(
-      event, 
-      camera, 
-      allWallObjects, 
-      container.value
-    )
+    if (container.value) {
+      found = selectionManager.selectObjectByBoundingBox(
+        event, 
+        camera, 
+        allWallObjects, 
+        container.value
+      )
+    }
   }
   
   if (found) {
@@ -1038,7 +1037,7 @@ const getSelectedSocket = (): Socket | null => {
   const selectedObjects = selectionManager.selectedObjects
   if (selectedObjects.length !== 1) return null
   
-  const obj = selectedObjects[0]
+  const obj = selectedObjects[0] as unknown as WallObject
   if (obj.getType() !== 'socket') return null
   
   return obj as Socket
@@ -1101,12 +1100,9 @@ const updateSocketPowerConsumption = () => {
 }
 
 // Модифицируем селектор, чтобы обновлять свойства розетки при выделении
-const originalOnSelectionChangeCallback = selectionManager.onSelectionChangeCallback
 selectionManager.setOnSelectionChangeCallback(() => {
-  // Сначала вызываем оригинальный колбэк для обновления счетчика
-  if (originalOnSelectionChangeCallback) {
-    originalOnSelectionChangeCallback()
-  }
+  // Обновляем счетчик выделенных объектов
+  updateSelectedObjectsCount()
   
   // Затем обновляем информацию о выделенной розетке
   updateSelectedSocketInfo()
@@ -1167,11 +1163,11 @@ const getFilteredSockets = (): Socket[] => {
   })
 }
 
-// Функция для получения метки типа устройства
-const getDeviceTypeLabel = (deviceType: SocketDeviceType): string => {
-  const type = socketDeviceTypes.find(t => t.value === deviceType)
-  return type ? type.label : 'Неизвестно'
-}
+// // Функция для получения метки типа устройства
+// const getDeviceTypeLabel = (deviceType: SocketDeviceType): string => {
+//   const type = socketDeviceTypes.find(t => t.value === deviceType)
+//   return type ? type.label : 'Неизвестно'
+// }
 
 // Функция для переключения устройства из дашборда
 const toggleDeviceFromDashboard = (socket: Socket): void => {

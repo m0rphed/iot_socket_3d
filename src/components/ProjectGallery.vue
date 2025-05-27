@@ -38,7 +38,7 @@
             :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
           >
             <div 
-              v-for="(project, index) in projects" 
+              v-for="project in projects" 
               :key="project.name"
               class="project-slide"
             >
@@ -86,7 +86,7 @@
         <!-- Индикаторы -->
         <div class="slider-indicators">
           <button
-            v-for="(project, index) in projects"
+            v-for="(_, index) in projects"
             :key="`indicator-${index}`"
             class="indicator"
             :class="{ active: index === currentIndex }"
