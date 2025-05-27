@@ -323,7 +323,7 @@ const isSelectMode = ref(false)
 const selectedObjectsCount = ref(0)
 const isMinimized = ref(false)
 const isFullscreen = ref(false)
-let selectionMethod: 'raycast' | 'boundingBox' = 'raycast'
+let selectionMethod: 'raycast' | 'boundingBox' = 'boundingBox'
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
