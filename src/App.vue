@@ -23,6 +23,11 @@ const tabs = [
 const setActiveTab = (tabId: string) => {
   activeTab.value = tabId
   iotStore.setCurrentTab(tabId)
+  
+  // На мобильных устройствах закрываем меню после выбора вкладки
+  if (window.innerWidth <= 768) {
+    sidebarOpen.value = false
+  }
 }
 
 const toggleSidebar = () => {
@@ -43,8 +48,15 @@ const handleLoadProjectFromGallery = (projectData: any) => {
 
 <template>
   <div class="app">
+    <!-- Overlay для мобильных устройств -->
+    <div 
+      v-if="sidebarOpen" 
+      class="mobile-overlay"
+      @click="sidebarOpen = false"
+    ></div>
+
     <!-- Боковое меню -->
-    <aside class="sidebar" :class="{ collapsed: !sidebarOpen }">
+    <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen, 'sidebar-closed': !sidebarOpen }">
       <div class="sidebar-header">
         <button class="menu-toggle" @click="toggleSidebar">
           <Menu :size="20" />
@@ -52,7 +64,7 @@ const handleLoadProjectFromGallery = (projectData: any) => {
         <span v-if="sidebarOpen" class="logo">🏠 IoT Dashboard</span>
       </div>
       
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" v-show="sidebarOpen">
         <button 
           v-for="tab in tabs" 
           :key="tab.id"
@@ -60,17 +72,24 @@ const handleLoadProjectFromGallery = (projectData: any) => {
           :class="['nav-item', { active: activeTab === tab.id }]"
         >
           <component :is="tab.icon" :size="20" />
-          <span v-if="sidebarOpen" class="nav-text">{{ tab.name }}</span>
+          <span class="nav-text">{{ tab.name }}</span>
         </button>
       </nav>
     </aside>
 
     <!-- Основной контент -->
-    <div class="main-layout" :class="{ 'sidebar-collapsed': !sidebarOpen }">
-      <!-- Хедер -->
+    <div class="main-layout" :class="{ 'sidebar-open': sidebarOpen }">
+      <!-- Хедер с кнопкой меню для мобильных -->
       <header class="header">
-        <h1>3D Редактор IoT комнат</h1>
-        <p>Создавайте и редактируйте планировку комнат, размещайте IoT-устройства</p>
+        <div class="header-content">
+          <button class="mobile-menu-toggle" @click="toggleSidebar">
+            <Menu :size="20" />
+          </button>
+          <div class="header-text">
+            <h1>3D Редактор IoT комнат</h1>
+            <p>Создавайте и редактируйте планировку комнат, размещайте IoT-устройства</p>
+          </div>
+        </div>
       </header>
 
       <!-- Контент -->
@@ -102,6 +121,19 @@ body {
   display: flex;
   height: 100vh;
   background: #0f1419;
+  position: relative;
+}
+
+/* Mobile Overlay */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: none;
 }
 
 /* Sidebar */
@@ -111,11 +143,9 @@ body {
   border-right: 1px solid #2d3748;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
-}
-
-.sidebar.collapsed {
-  width: 60px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1000;
 }
 
 .sidebar-header {
@@ -138,6 +168,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .menu-toggle:hover {
@@ -150,6 +181,7 @@ body {
   color: #f7fafc;
   font-size: 0.9rem;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .sidebar-nav {
@@ -184,11 +216,6 @@ body {
   color: white;
 }
 
-.sidebar.collapsed .nav-item {
-  justify-content: center;
-  padding: 12px 8px;
-}
-
 .nav-text {
   white-space: nowrap;
 }
@@ -204,11 +231,38 @@ body {
 .header {
   background: #1a202c;
   border-bottom: 1px solid #2d3748;
-  padding: 16px 24px;
   min-height: 60px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  width: 100%;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.mobile-menu-toggle:hover {
+  background: #2d3748;
+  color: #63b3ed;
+}
+
+.header-text {
+  flex: 1;
 }
 
 .header h1 {
@@ -229,7 +283,27 @@ body {
   overflow: auto;
 }
 
-/* Responsive */
+/* Desktop - collapsed sidebar */
+@media (min-width: 769px) {
+  .sidebar.sidebar-closed {
+    width: 60px;
+  }
+  
+  .sidebar.sidebar-closed .logo {
+    display: none;
+  }
+  
+  .sidebar.sidebar-closed .nav-item {
+    justify-content: center;
+    padding: 12px 8px;
+  }
+  
+  .sidebar.sidebar-closed .nav-text {
+    display: none;
+  }
+}
+
+/* Tablet and Mobile */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -240,15 +314,29 @@ body {
     transform: translateX(-100%);
   }
   
-  .sidebar:not(.collapsed) {
+  .sidebar.sidebar-open {
     transform: translateX(0);
+  }
+  
+  .sidebar.sidebar-closed {
+    width: 240px;
+    transform: translateX(-100%);
+  }
+  
+  .mobile-overlay {
+    display: block;
   }
   
   .main-layout {
     margin-left: 0;
+    width: 100%;
   }
   
-  .header {
+  .mobile-menu-toggle {
+    display: flex;
+  }
+  
+  .header-content {
     padding: 12px 16px;
   }
   
@@ -261,17 +349,25 @@ body {
   }
 }
 
+/* Small Mobile */
 @media (max-width: 480px) {
   .sidebar {
-    width: 100%;
+    width: 280px;
   }
   
-  .header {
+  .header-content {
     padding: 8px 12px;
   }
   
   .header h1 {
     font-size: 1rem;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+  .sidebar {
+    width: 100vw;
   }
 }
 </style>

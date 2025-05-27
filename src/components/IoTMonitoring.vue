@@ -15,7 +15,7 @@
         <div class="stat-label">Активных</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">{{ iotStore.getTotalPowerConsumption() }}Вт</div>
+        <div class="stat-value">{{ iotStore.getTotalPowerConsumption() }} Вт</div>
         <div class="stat-label">Потребление</div>
       </div>
     </div>
@@ -49,7 +49,7 @@
                 {{ device.isOn ? 'Включено' : 'Выключено' }}
               </span>
             </td>
-            <td class="device-power">{{ device.isOn ? device.powerConsumption : 0 }}Вт</td>
+            <td class="device-power">{{ device.isOn ? device.powerConsumption : 0 }} Вт</td>
           </tr>
         </tbody>
       </table>

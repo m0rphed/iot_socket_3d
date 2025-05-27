@@ -17,16 +17,18 @@
           class="nav-arrow nav-arrow-left" 
           @click="previousProject"
           :disabled="currentIndex === 0"
+          aria-label="Предыдущий проект"
         >
-          <ChevronLeft :size="24" />
+          <ChevronLeft :size="20" />
         </button>
 
         <button 
           class="nav-arrow nav-arrow-right" 
           @click="nextProject"
           :disabled="currentIndex === projects.length - 1"
+          aria-label="Следующий проект"
         >
-          <ChevronRight :size="24" />
+          <ChevronRight :size="20" />
         </button>
 
         <!-- Слайдер -->
@@ -52,8 +54,8 @@
                       class="load-project-btn"
                       @click="loadProject(project)"
                     >
-                      <Download :size="20" />
-                      Загрузить проект
+                      <Download :size="18" />
+                      <span>Загрузить</span>
                     </button>
                   </div>
                 </div>
@@ -62,16 +64,16 @@
                   <h3>{{ project.name }}</h3>
                   <div class="project-stats">
                     <div class="stat-item">
-                      <Home :size="16" />
-                      <span>{{ project.stats.rooms }} комнат</span>
+                      <Home :size="14" />
+                      <span>{{ project.stats.rooms }}</span>
                     </div>
                     <div class="stat-item">
-                      <Zap :size="16" />
-                      <span>{{ project.stats.devices }} устройств</span>
+                      <Zap :size="14" />
+                      <span>{{ project.stats.devices }}</span>
                     </div>
                     <div class="stat-item">
-                      <Activity :size="16" />
-                      <span>{{ project.stats.power }}Вт</span>
+                      <Activity :size="14" />
+                      <span>{{ project.stats.power }} Вт</span>
                     </div>
                   </div>
                   <p class="project-description">{{ project.description }}</p>
@@ -89,9 +91,8 @@
             class="indicator"
             :class="{ active: index === currentIndex }"
             @click="goToProject(index)"
-          >
-            <span class="sr-only">Проект {{ index + 1 }}</span>
-          </button>
+            :aria-label="`Перейти к проекту ${index + 1}`"
+          ></button>
         </div>
       </div>
     </div>
@@ -234,6 +235,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ===== БАЗОВЫЕ СТИЛИ ===== */
 .project-gallery {
   padding: 24px;
   width: 100%;
@@ -245,6 +247,7 @@ onMounted(() => {
 
 .gallery-header {
   margin-bottom: 24px;
+  text-align: center;
 }
 
 .gallery-header h2 {
@@ -267,6 +270,8 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   position: relative;
+  min-height: 0;
+  padding: 0 60px;
 }
 
 .loading-state {
@@ -291,34 +296,49 @@ onMounted(() => {
   100% { transform: rotate(360deg); }
 }
 
+/* ===== СЛАЙДЕР ===== */
 .slider-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 700px;
   position: relative;
+  margin: 0 auto;
 }
 
 .slider-wrapper {
   overflow: hidden;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  position: relative;
+  width: 100%;
 }
 
 .slider-track {
   display: flex;
-  transition: transform 0.5s ease;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
 }
 
 .project-slide {
   min-width: 100%;
+  width: 100%;
   flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+/* ===== КАРТОЧКА ПРОЕКТА ===== */
 .project-card {
   background: #1a202c;
   border: 1px solid #2d3748;
   border-radius: 12px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 500px;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .project-card:hover {
@@ -331,6 +351,7 @@ onMounted(() => {
   position: relative;
   height: 300px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .project-image img {
@@ -346,10 +367,7 @@ onMounted(() => {
 
 .project-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
@@ -366,7 +384,7 @@ onMounted(() => {
   background: #3182ce;
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 12px 20px;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
@@ -374,6 +392,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
+  font-size: 0.875rem;
 }
 
 .load-project-btn:hover {
@@ -381,135 +400,198 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+/* ===== ИНФОРМАЦИЯ О ПРОЕКТЕ ===== */
 .project-info {
-  padding: 24px;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .project-info h3 {
   color: #f7fafc;
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  line-height: 1.3;
+  flex-shrink: 0;
 }
 
 .project-stats {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: #a0aec0;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
+  background: rgba(49, 130, 206, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(49, 130, 206, 0.2);
 }
 
 .project-description {
   color: #a0aec0;
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
 }
 
+/* ===== НАВИГАЦИЯ ===== */
 .nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(26, 32, 44, 0.9);
-  border: 1px solid #2d3748;
+  background: rgba(15, 20, 25, 0.9);
+  border: 1px solid rgba(49, 130, 206, 0.3);
   color: #f7fafc;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 10;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .nav-arrow:hover:not(:disabled) {
-  background: #3182ce;
-  border-color: #3182ce;
-  transform: translateY(-50%) scale(1.1);
+  background: rgba(49, 130, 206, 0.9);
+  border-color: #4299e1;
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
 }
 
 .nav-arrow:disabled {
-  opacity: 0.3;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: translateY(-50%);
+  background: rgba(15, 20, 25, 0.5);
 }
 
 .nav-arrow-left {
-  left: -24px;
+  left: -22px;
 }
 
 .nav-arrow-right {
-  right: -24px;
+  right: -22px;
 }
 
+/* ===== ИНДИКАТОРЫ ===== */
 .slider-indicators {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-top: 24px;
+  gap: 12px;
+  margin-top: 20px;
 }
 
 .indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+  width: 32px;
+  height: 4px;
+  border-radius: 2px;
   border: none;
-  background: #2d3748;
+  background: rgba(45, 55, 72, 0.8);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.indicator.active {
-  background: #3182ce;
-  transform: scale(1.2);
+.indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #3182ce, #4299e1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
 }
 
-.indicator:hover {
-  background: #4a5568;
+.indicator.active::before {
+  width: 100%;
 }
 
+.indicator:hover:not(.active) {
+  background: rgba(74, 85, 104, 0.8);
+}
+
+.indicator:hover:not(.active)::before {
+  width: 30%;
+}
+
+/* ===== ИНФОРМАЦИЯ О ТЕКУЩЕМ ПРОЕКТЕ ===== */
 .current-project-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 24px;
+  margin-top: 20px;
   padding: 16px 0;
   border-top: 1px solid #2d3748;
 }
 
 .project-counter {
   color: #a0aec0;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .project-title {
   color: #f7fafc;
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+/* ===== АДАПТИВНОСТЬ ===== */
 
+/* Планшеты */
 @media (max-width: 768px) {
   .project-gallery {
     padding: 16px;
+  }
+  
+  .gallery-header {
+    margin-bottom: 16px;
+  }
+  
+  .gallery-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .gallery-header p {
+    font-size: 0.8rem;
+  }
+  
+  .gallery-container {
+    padding: 0 50px;
+  }
+  
+  .slider-container {
+    max-width: 100%;
+  }
+  
+  .project-card {
+    height: 400px;
   }
   
   .project-image {
@@ -520,8 +602,24 @@ onMounted(() => {
     padding: 16px;
   }
   
+  .project-info h3 {
+    font-size: 1.125rem;
+    margin-bottom: 10px;
+  }
+  
   .project-stats {
-    gap: 12px;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .stat-item {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+  
+  .project-description {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 2;
   }
   
   .nav-arrow {
@@ -537,30 +635,200 @@ onMounted(() => {
     right: -20px;
   }
   
+  .slider-indicators {
+    gap: 10px;
+    margin-top: 16px;
+  }
+  
+  .indicator {
+    width: 28px;
+    height: 3px;
+  }
+  
+  .load-project-btn {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+  
   .current-project-info {
     flex-direction: column;
     gap: 8px;
     text-align: center;
+    margin-top: 16px;
+    padding: 12px 0;
   }
 }
 
+/* Мобильные */
 @media (max-width: 480px) {
+  .project-gallery {
+    padding: 12px;
+  }
+  
+  .gallery-header {
+    margin-bottom: 12px;
+  }
+  
+  .gallery-header h2 {
+    font-size: 1.125rem;
+  }
+  
+  .gallery-header p {
+    font-size: 0.75rem;
+  }
+  
+  .gallery-container {
+    padding: 0 40px;
+  }
+  
+  .project-card {
+    height: 350px;
+  }
+  
+  .project-image {
+    height: 160px;
+  }
+  
+  .project-info {
+    padding: 12px;
+  }
+  
+  .project-info h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  
+  .project-stats {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  
+  .stat-item {
+    font-size: 0.7rem;
+    padding: 2px 4px;
+  }
+  
+  .project-description {
+    font-size: 0.7rem;
+    -webkit-line-clamp: 3;
+  }
+  
   .nav-arrow {
-    position: static;
-    transform: none;
-    margin: 0 8px;
+    width: 36px;
+    height: 36px;
   }
   
-  .slider-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  .nav-arrow-left {
+    left: -18px;
   }
   
-  .nav-controls {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
+  .nav-arrow-right {
+    right: -18px;
+  }
+  
+  .slider-indicators {
+    margin-top: 12px;
+    gap: 8px;
+  }
+  
+  .indicator {
+    width: 24px;
+    height: 3px;
+  }
+  
+  .load-project-btn {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+  
+  .current-project-info {
+    margin-top: 12px;
+    padding: 8px 0;
+    gap: 6px;
+  }
+  
+  .project-counter {
+    font-size: 0.75rem;
+  }
+  
+  .project-title {
+    font-size: 0.8rem;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 360px) {
+  .project-gallery {
+    padding: 8px;
+  }
+  
+  .gallery-header {
+    margin-bottom: 8px;
+  }
+  
+  .gallery-container {
+    padding: 0 35px;
+  }
+  
+  .project-card {
+    height: 320px;
+  }
+  
+  .project-image {
+    height: 140px;
+  }
+  
+  .project-info {
+    padding: 10px;
+  }
+  
+  .project-info h3 {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+  
+  .project-stats {
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  
+  .stat-item {
+    font-size: 0.65rem;
+    padding: 2px 3px;
+  }
+  
+  .project-description {
+    font-size: 0.65rem;
+    -webkit-line-clamp: 2;
+  }
+  
+  .nav-arrow {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .nav-arrow-left {
+    left: -16px;
+  }
+  
+  .nav-arrow-right {
+    right: -16px;
+  }
+  
+  .slider-indicators {
+    gap: 6px;
+  }
+  
+  .indicator {
+    width: 20px;
+    height: 2px;
+  }
+  
+  .load-project-btn {
+    padding: 6px 10px;
+    font-size: 0.7rem;
   }
 }
 </style> 
