@@ -61,7 +61,7 @@ const handleLoadProjectFromGallery = (projectData: any) => {
         <button class="menu-toggle" @click="toggleSidebar">
           <Menu :size="20" />
         </button>
-        <span v-if="sidebarOpen" class="logo">🏠 IoT Dashboard</span>
+        <span v-if="sidebarOpen" class="logo">🏠 Меню управления</span>
       </div>
       
       <nav class="sidebar-nav" v-show="sidebarOpen">
@@ -86,8 +86,8 @@ const handleLoadProjectFromGallery = (projectData: any) => {
             <Menu :size="20" />
           </button>
           <div class="header-text">
-            <h1>3D Редактор IoT комнат</h1>
-            <p>Создавайте и редактируйте планировку комнат, размещайте IoT-устройства</p>
+            <h1>Управление smart розетками</h1>
+            <p>Управляйте домом с помощью 3D-редактора, контролируйте ⚡ устройств</p>
           </div>
         </div>
       </header>

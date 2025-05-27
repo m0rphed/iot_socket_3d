@@ -3,7 +3,7 @@
     <!-- Заголовок окна -->
     <div class="window-header">
       <div class="window-title">
-        <h3>3D Редактор IoT комнат</h3>
+        <h3>3D-планировщик комнат и устройств</h3>
       </div>
       <div class="window-controls">
         <button class="minimize-btn" @click="isMinimized = !isMinimized" :title="isMinimized ? 'Развернуть' : 'Свернуть'">
