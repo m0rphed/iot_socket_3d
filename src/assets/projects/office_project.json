@@ -1,0 +1,676 @@
+{
+  "name": "кал",
+  "date": 1748955733394,
+  "rooms": [
+    {
+      "width": 5,
+      "height": 6.5,
+      "wallHeight": 2.5,
+      "position": {
+        "x": -6.5,
+        "y": 0,
+        "z": 1.25
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": -3.25
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 2.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 6.5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": 3.25
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -2.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 6.5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "door",
+          "position": 0.6,
+          "wallIndex": 1
+        },
+        {
+          "type": "door",
+          "position": 0.5,
+          "wallIndex": 0
+        },
+        {
+          "type": "socket",
+          "position": 0.2,
+          "wallIndex": 1,
+          "name": "рабочая_станция_1",
+          "deviceType": "power",
+          "isOn": true,
+          "powerConsumption": 100
+        },
+        {
+          "type": "socket",
+          "position": 0.3,
+          "wallIndex": 1,
+          "name": "офис2_дисплей",
+          "deviceType": "media",
+          "isOn": true,
+          "powerConsumption": 120
+        },
+        {
+          "type": "socket",
+          "position": 0.8,
+          "wallIndex": 3,
+          "name": "Розетка 45",
+          "deviceType": "climate",
+          "isOn": true,
+          "powerConsumption": 0
+        },
+        {
+          "type": "socket",
+          "position": 0.2,
+          "wallIndex": 3,
+          "name": "офис2_датчик_дыма",
+          "deviceType": "security",
+          "isOn": true,
+          "powerConsumption": 15
+        }
+      ]
+    },
+    {
+      "width": 7,
+      "height": 4.5,
+      "wallHeight": 2.5,
+      "position": {
+        "x": -0.5,
+        "y": 0,
+        "z": 6.75
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": -2.25
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 7,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 3.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 4.5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": 2.25
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 7,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -3.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 4.5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "door",
+          "position": 0.3,
+          "wallIndex": 0
+        },
+        {
+          "type": "socket",
+          "position": 0.9,
+          "wallIndex": 2,
+          "name": "meeting1_интер_доска",
+          "deviceType": "media",
+          "isOn": true,
+          "powerConsumption": 100
+        },
+        {
+          "type": "socket",
+          "position": 0.7,
+          "wallIndex": 2,
+          "name": "meeting1_питание1",
+          "deviceType": "power",
+          "isOn": true,
+          "powerConsumption": 30
+        },
+        {
+          "type": "socket",
+          "position": 0.8,
+          "wallIndex": 0,
+          "name": "освещение_2",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 60
+        }
+      ]
+    },
+    {
+      "width": 4,
+      "height": 9,
+      "wallHeight": 2.5,
+      "position": {
+        "x": 5,
+        "y": 0,
+        "z": 3.5
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": -4.5
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 4,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 2,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 9,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": 4.5
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 4,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -2,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 9,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "door",
+          "position": 0.5,
+          "wallIndex": 0
+        },
+        {
+          "type": "door",
+          "position": 0.2,
+          "wallIndex": 3
+        },
+        {
+          "type": "socket",
+          "position": 0.3,
+          "wallIndex": 1,
+          "name": "экран_1",
+          "deviceType": "media",
+          "isOn": true,
+          "powerConsumption": 100
+        },
+        {
+          "type": "socket",
+          "position": 0.8,
+          "wallIndex": 1,
+          "name": "свет_в_офисе3",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 60
+        },
+        {
+          "type": "socket",
+          "position": 0.5,
+          "wallIndex": 2,
+          "name": "рабочая_станция_3",
+          "deviceType": "power",
+          "isOn": true,
+          "powerConsumption": 200
+        },
+        {
+          "type": "socket",
+          "position": 0.6,
+          "wallIndex": 3,
+          "name": "рабочая_станция_2",
+          "deviceType": "power",
+          "isOn": true,
+          "powerConsumption": 100
+        },
+        {
+          "type": "socket",
+          "position": 0.8,
+          "wallIndex": 3,
+          "name": "датчик_дыма_3",
+          "deviceType": "security",
+          "isOn": true,
+          "powerConsumption": 15
+        },
+        {
+          "type": "door",
+          "position": 0.9,
+          "wallIndex": 1
+        }
+      ]
+    },
+    {
+      "width": 3,
+      "height": 6,
+      "wallHeight": 2.5,
+      "position": {
+        "x": -6.5,
+        "y": 0,
+        "z": -5
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": -3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 3,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 1.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 6,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": 3
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 3,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -1.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 6,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "socket",
+          "position": 0.8,
+          "wallIndex": 3,
+          "name": "вентилятор",
+          "deviceType": "climate",
+          "isOn": true,
+          "powerConsumption": 20
+        },
+        {
+          "type": "socket",
+          "position": 0.6,
+          "wallIndex": 1,
+          "name": "питание4",
+          "deviceType": "power",
+          "isOn": true,
+          "powerConsumption": 80
+        }
+      ]
+    },
+    {
+      "width": 7.5,
+      "height": 6,
+      "wallHeight": 2.5,
+      "position": {
+        "x": -1.25,
+        "y": 0,
+        "z": -7
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": -3
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 7.5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 3.75,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 6,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": 3
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 7.5,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -3.75,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 6,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "door",
+          "position": 0.8,
+          "wallIndex": 1
+        },
+        {
+          "type": "door",
+          "position": 0.4,
+          "wallIndex": 3
+        },
+        {
+          "type": "door",
+          "position": 0.9,
+          "wallIndex": 3
+        },
+        {
+          "type": "door",
+          "position": 0.4,
+          "wallIndex": 2
+        },
+        {
+          "type": "socket",
+          "position": 0.2,
+          "wallIndex": 0,
+          "name": "офис1_кондиционер",
+          "deviceType": "climate",
+          "isOn": true,
+          "powerConsumption": 60
+        },
+        {
+          "type": "socket",
+          "position": 0.8,
+          "wallIndex": 2,
+          "name": "Розетка 323",
+          "deviceType": "power",
+          "isOn": true,
+          "powerConsumption": 0
+        },
+        {
+          "type": "socket",
+          "position": 0.3,
+          "wallIndex": 1,
+          "name": "офис1_лампа_1",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 70
+        }
+      ]
+    },
+    {
+      "width": 3,
+      "height": 7,
+      "wallHeight": 2.5,
+      "position": {
+        "x": 8.5,
+        "y": 0,
+        "z": -6.5
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": -3.5
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 3,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 1.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 7,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": 3.5
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 3,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -1.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 7,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "door",
+          "position": 0.9,
+          "wallIndex": 3
+        },
+        {
+          "type": "socket",
+          "position": 0.3,
+          "wallIndex": 3,
+          "name": "wc_датчик",
+          "deviceType": "security",
+          "isOn": true,
+          "powerConsumption": 15
+        },
+        {
+          "type": "socket",
+          "position": 0.7,
+          "wallIndex": 3,
+          "name": "wc_свет",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 70
+        }
+      ]
+    }
+  ]
+}

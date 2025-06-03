@@ -1,11 +1,11 @@
 {
   "name": "Мой проект",
-  "date": 1748179509751,
+  "date": 1748969650602,
   "rooms": [
     {
       "width": 6,
       "height": 6.5,
-      "wallHeight": "2",
+      "wallHeight": "2.5",
       "position": {
         "x": -4,
         "y": 0,
@@ -15,7 +15,7 @@
         {
           "position": {
             "x": 0,
-            "y": 1,
+            "y": 1.25,
             "z": -3.25
           },
           "rotation": {
@@ -24,13 +24,13 @@
             "z": 0
           },
           "width": 6,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         },
         {
           "position": {
             "x": 3,
-            "y": 1,
+            "y": 1.25,
             "z": 0
           },
           "rotation": {
@@ -39,13 +39,13 @@
             "z": 0
           },
           "width": 6.5,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         },
         {
           "position": {
             "x": 0,
-            "y": 1,
+            "y": 1.25,
             "z": 3.25
           },
           "rotation": {
@@ -54,13 +54,13 @@
             "z": -3.141592653589793
           },
           "width": 6,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         },
         {
           "position": {
             "x": -3,
-            "y": 1,
+            "y": 1.25,
             "z": 0
           },
           "rotation": {
@@ -69,7 +69,7 @@
             "z": 0
           },
           "width": 6.5,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         }
       ],
@@ -88,31 +88,76 @@
           "type": "socket",
           "position": 0.7,
           "wallIndex": 3,
-          "name": "Розетка 554",
+          "name": "док_станция",
           "deviceType": "power",
-          "isOn": false,
-          "powerConsumption": 0
+          "isOn": true,
+          "powerConsumption": 600
         },
         {
           "type": "socket",
           "position": 0.2,
           "wallIndex": 2,
-          "name": "Розетка 759",
+          "name": "ПК",
           "deviceType": "power",
-          "isOn": false,
-          "powerConsumption": 0
+          "isOn": true,
+          "powerConsumption": 800
         },
         {
           "type": "door",
           "position": 0.6,
           "wallIndex": 1
+        },
+        {
+          "type": "socket",
+          "position": 0.05,
+          "wallIndex": 3,
+          "name": "датчик",
+          "deviceType": "security",
+          "isOn": true,
+          "powerConsumption": 15
+        },
+        {
+          "type": "socket",
+          "position": 0.7,
+          "wallIndex": 0,
+          "name": "лампа_1",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 80
+        },
+        {
+          "type": "socket",
+          "position": 0.5,
+          "wallIndex": 1,
+          "name": "лампа_2",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 80
+        },
+        {
+          "type": "socket",
+          "position": 0.4,
+          "wallIndex": 1,
+          "name": "tv",
+          "deviceType": "media",
+          "isOn": true,
+          "powerConsumption": 100
+        },
+        {
+          "type": "socket",
+          "position": 0.5,
+          "wallIndex": 3,
+          "name": "проигрыватель",
+          "deviceType": "media",
+          "isOn": true,
+          "powerConsumption": 60
         }
       ]
     },
     {
       "width": 3,
       "height": 5,
-      "wallHeight": "2",
+      "wallHeight": "2.5",
       "position": {
         "x": 0.5,
         "y": 0,
@@ -122,7 +167,7 @@
         {
           "position": {
             "x": 0,
-            "y": 1,
+            "y": 1.25,
             "z": -2.5
           },
           "rotation": {
@@ -131,13 +176,13 @@
             "z": 0
           },
           "width": 3,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         },
         {
           "position": {
             "x": 1.5,
-            "y": 1,
+            "y": 1.25,
             "z": 0
           },
           "rotation": {
@@ -146,13 +191,13 @@
             "z": 0
           },
           "width": 5,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         },
         {
           "position": {
             "x": 0,
-            "y": 1,
+            "y": 1.25,
             "z": 2.5
           },
           "rotation": {
@@ -161,13 +206,13 @@
             "z": -3.141592653589793
           },
           "width": 3,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         },
         {
           "position": {
             "x": -1.5,
-            "y": 1,
+            "y": 1.25,
             "z": 0
           },
           "rotation": {
@@ -176,7 +221,7 @@
             "z": 0
           },
           "width": 5,
-          "height": 2,
+          "height": 2.5,
           "depth": 0.10000000149011612
         }
       ],
@@ -185,28 +230,129 @@
           "type": "socket",
           "position": 0.2,
           "wallIndex": 1,
-          "name": "Розетка 585",
-          "deviceType": "power",
-          "isOn": false,
-          "powerConsumption": 0
+          "name": "вентилятор",
+          "deviceType": "climate",
+          "isOn": true,
+          "powerConsumption": 60
         },
         {
           "type": "socket",
           "position": 0.6,
           "wallIndex": 1,
-          "name": "Розетка 621",
-          "deviceType": "light",
+          "name": "плита",
+          "deviceType": "power",
           "isOn": true,
-          "powerConsumption": 0
+          "powerConsumption": 2000
         },
         {
           "type": "socket",
           "position": 0.8,
           "wallIndex": 1,
-          "name": "Розетка кондиционер_1",
+          "name": "холодильник_1",
           "deviceType": "power",
           "isOn": true,
-          "powerConsumption": 15
+          "powerConsumption": 800
+        }
+      ]
+    },
+    {
+      "width": 4,
+      "height": 2,
+      "wallHeight": "2.5",
+      "position": {
+        "x": -5,
+        "y": 0,
+        "z": 0
+      },
+      "walls": [
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": -1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "width": 4,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 2,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": -1.5707963267948966,
+            "z": 0
+          },
+          "width": 2,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 1.25,
+            "z": 1
+          },
+          "rotation": {
+            "x": -3.141592653589793,
+            "y": 1.2246467991473532e-16,
+            "z": -3.141592653589793
+          },
+          "width": 4,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        },
+        {
+          "position": {
+            "x": -2,
+            "y": 1.25,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 1.5707963267948966,
+            "z": 0
+          },
+          "width": 2,
+          "height": 2.5,
+          "depth": 0.10000000149011612
+        }
+      ],
+      "wallObjects": [
+        {
+          "type": "socket",
+          "position": 0.6,
+          "wallIndex": 0,
+          "name": "свет_ванная",
+          "deviceType": "light",
+          "isOn": true,
+          "powerConsumption": 60
+        },
+        {
+          "type": "socket",
+          "position": 0.2,
+          "wallIndex": 1,
+          "name": "розетка_ванная",
+          "deviceType": "power",
+          "isOn": false,
+          "powerConsumption": 500
+        },
+        {
+          "type": "socket",
+          "position": 0.9,
+          "wallIndex": 2,
+          "name": "вентилятор",
+          "deviceType": "climate",
+          "isOn": false,
+          "powerConsumption": 80
         }
       ]
     }
