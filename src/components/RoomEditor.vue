@@ -326,7 +326,7 @@ const isSelectMode = ref(false)
 const selectedObjectsCount = ref(0)
 const isMinimized = ref(false)
 const isFullscreen = ref(false)
-let selectionMethod: 'raycast' | 'boundingBox' = 'raycast'
+const selectionMethod = ref<'raycast' | 'boundingBox'>('boundingBox')
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -480,14 +480,14 @@ const onMouseDown = (event: MouseEvent) => {
 // Обработчик клика в режиме выделения
 const handleSelectionModeClick = (event: MouseEvent) => {
   let foundWallObject: WallObject | null = null
-  if (selectionMethod === 'raycast') {
+  if (selectionMethod.value === 'raycast') {
     foundWallObject = selectionManager.selectObjectByRaycast(
       mouse, 
       camera, 
       selectionManager.getAllWallObjectGroups(), 
       raycaster
     )
-  } else if (selectionMethod === 'boundingBox') {
+  } else if (selectionMethod.value === 'boundingBox') {
     const allWallObjects = rooms.flatMap(room => room.getWallObjects())
     if (container.value) {
       foundWallObject = selectionManager.selectObjectByBoundingBox(
@@ -988,14 +988,14 @@ const handleObjectModeClick = (event: MouseEvent) => {
 // Обработчик наведения в режиме выделения
 const handleSelectionModeHover = (event: MouseEvent) => {
   let found: WallObject | null = null
-  if (selectionMethod === 'raycast') {
+  if (selectionMethod.value === 'raycast') {
     found = selectionManager.selectObjectByRaycast(
       mouse, 
       camera, 
       selectionManager.getAllWallObjectGroups(), 
       raycaster
     )
-  } else if (selectionMethod === 'boundingBox') {
+  } else if (selectionMethod.value === 'boundingBox') {
     const allWallObjects = rooms.flatMap(room => room.getWallObjects())
     if (container.value) {
       found = selectionManager.selectObjectByBoundingBox(

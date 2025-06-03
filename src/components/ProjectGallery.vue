@@ -459,42 +459,60 @@ onMounted(() => {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(15, 20, 25, 0.9);
-  border: 1px solid rgba(49, 130, 206, 0.3);
+  background: rgba(15, 20, 25, 0.95);
+  border: 1px solid rgba(49, 130, 206, 0.4);
   color: #f7fafc;
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 20;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nav-arrow svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke-width: 2.5 !important;
+  color: #f7fafc !important;
+  stroke: currentColor !important;
+  transition: all 0.3s ease;
 }
 
 .nav-arrow:hover:not(:disabled) {
-  background: rgba(49, 130, 206, 0.9);
+  background: rgba(49, 130, 206, 0.95);
   border-color: #4299e1;
-  transform: translateY(-50%) scale(1.05);
-  box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 8px 24px rgba(49, 130, 206, 0.5);
+}
+
+.nav-arrow:hover:not(:disabled) svg {
+  color: #ffffff !important;
+  transform: scale(1.1);
 }
 
 .nav-arrow:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
   transform: translateY(-50%);
-  background: rgba(15, 20, 25, 0.5);
+  background: rgba(15, 20, 25, 0.4);
+}
+
+.nav-arrow:disabled svg {
+  color: #718096 !important;
 }
 
 .nav-arrow-left {
-  left: -22px;
+  left: -24px;
 }
 
 .nav-arrow-right {
-  right: -22px;
+  right: -24px;
 }
 
 /* ===== ИНДИКАТОРЫ ===== */
@@ -715,16 +733,22 @@ onMounted(() => {
   }
   
   .nav-arrow {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+  }
+  
+  .nav-arrow svg {
+    width: 16px !important;
+    height: 16px !important;
   }
   
   .nav-arrow-left {
-    left: -18px;
+    left: -19px;
   }
   
   .nav-arrow-right {
-    right: -18px;
+    right: -19px;
   }
   
   .slider-indicators {
@@ -805,16 +829,22 @@ onMounted(() => {
   }
   
   .nav-arrow {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+  }
+  
+  .nav-arrow svg {
+    width: 14px !important;
+    height: 14px !important;
   }
   
   .nav-arrow-left {
-    left: -16px;
+    left: -17px;
   }
   
   .nav-arrow-right {
-    right: -16px;
+    right: -17px;
   }
   
   .slider-indicators {
